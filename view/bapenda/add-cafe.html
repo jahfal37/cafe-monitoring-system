@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Cafe Baru - Cafe Monitoring System</title>
+    <link rel="stylesheet" href="../src/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-cafe-secondary font-sans">
+
+    <nav class="bg-white border-b border-gray-100 px-6 py-4 flex items-center gap-4 shadow-sm">
+        <button onclick="window.location.href='select-cafe.html'" class="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer">
+            <i data-lucide="arrow-left" class="w-6 h-6 text-cafe-dark"></i>
+        </button>
+        <div class="bg-cafe-primary p-2 rounded-lg text-white">
+            <i data-lucide="coffee" class="w-5 h-5"></i>
+        </div>
+        <span class="font-bold text-xl text-cafe-dark">Tambah Cafe Baru</span>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-6 md:p-12">
+        <div class="bg-white rounded-cafe shadow-cafe-card p-8 md:p-12 border border-white">
+            <form action="#" class="space-y-8">
+                <!-- Form untuk menambah cafe, informasi cafe akan tersimpan di database -->
+                <div>
+                    <!-- Nama cafe -->
+                    <label class="block text-sm font-bold text-cafe-dark mb-3">Nama cafe</label>
+                    <input type="text" placeholder="Masukkan nama cafe" 
+                           class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
+                </div>
+
+                <div>
+                    <!-- Alamat cafe -->
+                    <label class="block text-sm font-bold text-cafe-dark mb-3">Alamat</label>
+                    <textarea placeholder="Masukkan alamat cafe" rows="4"
+                              class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all resize-none"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <!-- Jam buka cafe -->
+                        <label class="block text-sm font-bold text-cafe-dark mb-3">Jam Buka</label>
+                        <input type="time" class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
+                    </div>
+                    <div>
+                        <!-- Jam tutup cafe -->
+                        <label class="block text-sm font-bold text-cafe-dark mb-3">Jam Tutup</label>
+                        <input type="time" class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <!-- Jumlah meja cafe -->
+                    <label class="block text-sm font-bold text-cafe-dark mb-3">Jumlah Meja</label>
+                    <input type="number" placeholder="Masukkan jumlah meja" 
+                               class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
+                </div>
+
+                <div>
+                    <!-- Jumlah kamera cafe -->
+                    <label class="block text-sm font-bold text-cafe-dark mb-3">Jumlah Kamera</label>
+                    <input type="number" placeholder="Masukkan jumlah kamera" 
+                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
+                </div>
+
+
+                <div>
+                    <!-- Username untuk login cafe -->
+                    <label class="block text-sm font-bold text-cafe-dark mb-3">Username</label>
+                    <input type="text" placeholder="Masukkan username" 
+                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
+                </div>
+
+                <div>
+                    <!-- Password untuk login cafe -->
+                    <label class="block text-sm font-bold text-cafe-dark mb-3">Password</label>
+                    <input type="password" placeholder="Masukkan password" 
+                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 pt-6">
+                    <button type="button" onclick="window.location.href='select-cafe.html'"
+                            class="flex-1 bg-white border-2 border-cafe-border hover:bg-gray-50 text-cafe-dark font-bold py-4 rounded-xl transition-all cursor-pointer">
+                        Batal
+                    </button>
+
+                    <!-- Tombol submit. setelah tombol ditekan informasi akan masuk ke database -->
+                    <button type="submit" 
+                            class="flex-1 bg-cafe-primary hover:bg-cafe-accent text-white font-bold py-4 rounded-xl shadow-lg shadow-cafe-primary/20 transition-all active:scale-95 cursor-pointer">
+                        Tambah
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

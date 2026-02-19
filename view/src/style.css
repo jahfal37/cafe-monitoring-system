@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  /* Warna Kustom */
+  --color-cafe-primary: #F9B208;    /* Warna utama (Tombol/Logo) */
+  --color-cafe-secondary: #FFF3E0;  /* Latar belakang halaman */
+  --color-cafe-accent: #E67E22;     /* Hover & Fokus */
+  --color-cafe-dark: #101828;       /* Teks Judul */
+  --color-cafe-muted: #667085;      /* Teks Deskripsi/Placeholder */
+  --color-cafe-light: #F4F4F9;      /* Background Box Demo */
+  --color-cafe-border: #D0D5DD;     /* Border Input */
+  --color-cafe-red: #F10000;      /* Warna Merah */
+  --color-cafe-red-nonaktive: #FFD3D3;   /* Warna Merah Muda */
+  --color-cafe-green: #00CA65;    /* Warna Hijau */
+  --color-cafe-green-nonaktive: #D3FFED;   /* Warna Hijau Muda */
+  --color-cafe-blue: #2196f3;   /* Warna Biru */
+  --color-cafe-blue-nonaktive: #e3f2fd;   /* Warna Biru Muda */
+  --color-cafe-gray: #E5E7EB;   /* Warna Abu-abu */
+
+  /* Bayangan & Radius */
+  --shadow-cafe-card: 0 10px 25px -5px rgba(249, 178, 8, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --radius-cafe: 1.5rem;
+
+  /* Transisi Kustom */
+  --transition-sidebar: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}

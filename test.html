@@ -1,0 +1,74 @@
+<section>
+            <!-- Ganti dengan nama cafe terkait -->
+            <h1 class="text-3xl font-bold text-cafe-dark mb-2 tracking-tight">Dashboard <span>Cafe</span></h1>
+            <p class="text-cafe-muted text-sm mb-8">Monitoring performa cafe dan analisis pelanggan</p>
+
+            <!-- Informasi total pelanggan hari ini dan rata - rata pelanggan -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div
+                    class="bg-white p-8 rounded-cafe shadow-cafe-card border border-white flex items-center justify-between">
+                    <div class="bg-orange-50 p-4 rounded-2xl text-cafe-primary">
+                        <i data-lucide="users" class="w-8 h-8"></i>
+                    </div>
+                    <div class="text-right">
+                        <!-- Ganti dengan data total pelanggan saat ini pada cafe terkait -->
+                        <span id="totalSaatIni" class="text-4xl font-black text-cafe-dark">0</span>
+                        <p class="text-sm text-cafe-muted font-medium mt-1">Total pelanggan saat ini</p>
+                    </div>
+                </div>
+                <div
+                    class="bg-white p-8 rounded-cafe shadow-cafe-card border border-white flex items-center justify-between">
+                    <div class="bg-cafe-blue-nonaktive p-4 rounded-2xl text-cafe-blue">
+                        <i data-lucide="bar-chart-3" class="w-8 h-8"></i> 
+                    </div>
+                    <div class="text-right">
+                        <!-- Ganti dengan data rata-rata pelanggan per bulan pada cafe terkait -->
+                        <span id="rataRataBulan" class="text-4xl font-black text-cafe-dark">0</span>
+                        <p class="text-sm text-cafe-muted font-medium mt-1">Rata-rata per bulan ini</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grafik Tren Pelanggan Selama Sebulan -->
+            <div class="bg-white p-8 rounded-cafe shadow-cafe-card border border-white mb-8">
+                <h3 class="font-bold text-cafe-dark text-lg mb-4">Tren Pelanggan <span
+                        id="trenPelangganBulan">Bulan</span> <span id="trenPelangganTahun">Tahun</span></h3>
+                <div class="h-87.5">
+                    <canvas id="trenChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tabel Jumlah Pelanggan per Hari -->
+            <div class="bg-white pb-8 rounded-cafe shadow-cafe-card border border-white overflow-hidden">
+                <div class="p-8 border-b border-gray-50 flex justify-between items-center">
+                    <h3 class="font-bold text-cafe-dark text-lg">Jumlah Pelanggan per Hari</h3>
+                    <div class="flex items-center gap-4">
+                        <span>Periode:</span>
+                        <div
+                            class="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium">
+                            <select id="monthSelect" class="bg-transparent focus:outline-none cursor-pointer">
+                            </select>
+                            <select id="yearSelect" class="bg-transparent focus:outline-none cursor-pointer">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 text-cafe-muted text-sm uppercase tracking-wider font-semibold">
+                            <tr>
+                                <th class="px-8 py-4">Hari</th>
+                                <th class="px-8 py-4">Tanggal</th>
+                                <th class="px-8 py-4">Jumlah Pelanggan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <!-- Isi dengan data jumlah pelanggan per hari pada cafe terkait -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+        <main id="mainContent" class="flex-1 pt-24 p-6 md:w-[calc(100%-18rem)] transition-all duration-300 md:ml-72 ml-0"></main>
