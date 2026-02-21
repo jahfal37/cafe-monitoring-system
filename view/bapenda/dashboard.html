@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -129,8 +130,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="overflow-x-auto w-full">
-                    <table class="w-full text-left">
+                <div class="overflow-x-auto w-full px-4 md:px-8">
+                    <table class="w-full text-center ">
                         <thead class="bg-gray-50 text-cafe-muted text-sm uppercase tracking-wider font-semibold">
                             <tr>
                                 <th class="px-4 md:px-8 py-4">Hari</th>
@@ -177,92 +178,9 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Inisialisasi Chart
-        let myChart;
-        const ctx = document.getElementById('trenChart').getContext('2d');
+    <script src="js/dashboard.js"></script>
+   
 
-        function updateDashboard() {
-            const bulanVal = document.getElementById('monthSelect').value;
-            const tahunVal = document.getElementById('yearSelect').value;
-            const namaBulan = [bulanVal ? parseInt(bulanVal) - 1 : new Date().getMonth(), tahunVal ? parseInt(tahunVal) : new Date().getFullYear()].map((val, idx) => {
-                if (idx === 0) return ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][val];
-            });
-
-            // 1. Generate Data 30 Hari (Simulasi)
-            const dataBulanan = [];
-            let totalBulan = 0;
-
-            for (let i = 1; i <= 30; i++) {
-                const jumlah = Math.floor(Math.random() * (100 - 40 + 1)) + 40; // Data acak 40-100
-                dataBulanan.push({
-                    tanggal: i,
-                    hari: ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"][new Date(tahunVal, bulanVal - 1, i).getDay()],
-                    jumlah: jumlah
-                });
-                totalBulan += jumlah;
-            }
-
-            // 2. Update Statistik (Opsional kamu)
-            document.getElementById('totalSaatIni').innerText = dataBulanan[dataBulanan.length - 1].jumlah; // Pelanggan hari terakhir
-            document.getElementById('rataRataBulan').innerText = Math.round(totalBulan / 30);
-
-            document.getElementById('trenPelangganBulan').innerText = namaBulan;
-            document.getElementById('trenPelangganTahun').innerText = tahunVal;
-
-            // 3. Update Tabel
-            const tbody = document.querySelector('tbody');
-            tbody.innerHTML = '';
-            dataBulanan.forEach(item => {
-                const row = `
-                    <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100">
-                        <td class="px-8 py-4 text-cafe-dark font-medium">${item.hari}</td>
-                        <td class="px-8 py-4 text-cafe-muted italic">${item.tanggal}</td>
-                        <td class="px-8 py-4 text-cafe-dark font-bold">${item.jumlah}</td>
-                    </tr>`;
-                tbody.innerHTML += row;
-            });
-
-            // 4. Update Grafik Garis
-            if (myChart) myChart.destroy(); // Hapus grafik lama sebelum buat baru
-
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dataBulanan.map(d => d.tanggal),
-                    datasets: [{
-                        label: `Jumlah Pelanggan ${namaBulan} ${tahunVal}`,
-                        data: dataBulanan.map(d => d.jumlah),
-                        borderColor: '#F9B208',
-                        backgroundColor: 'rgba(249, 178, 8, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4, // Membuat garis melengkung lembut
-                        pointRadius: 4,
-                        pointBackgroundColor: '#F9B208'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        // Event Listener untuk Dropdown
-        document.getElementById('monthSelect').addEventListener('change', updateDashboard);
-        document.getElementById('yearSelect').addEventListener('change', updateDashboard);
-
-        // Jalankan saat pertama kali muat halaman
-        window.addEventListener('load', updateDashboard);
-
-        lucide.createIcons();
-    </script>
 </body>
 
 </html>
