@@ -1,7 +1,10 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from datetime import date
+from datetime import date, datetime
+
+app = Flask(__name__)
+CORS(app, origins=["http://localhost:5173"])
 
 app = Flask(__name__)
 CORS(app)
@@ -15,6 +18,18 @@ class Pelanggan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tanggal = db.Column(db.Date)
     jumlah = db.Column(db.Integer)
+
+    from datetime import datetime
+
+class Device(db.Model):
+    __tablename__ = "devices"
+
+    id = db.Column(db.Integer, primary_key=True)
+    device_code = db.Column(db.String(50), unique=True, nullable=False)
+    cafe_name = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.Enum("active", "inactive"), nullable=False, default="inactive")
+    last_update = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 @app.route("/")
 def home():
@@ -81,6 +96,61 @@ def dashboard():
         "tahun": tahun,
         "data_harian": data_harian
     })
+
+@app.route("/api/devices", methods=["GET"])
+def get_devices():
+    devices = Device.query.all()
+
+    result = [
+        {
+            "device_code": d.device_code,
+            "cafe_name": d.cafe_name,
+            "status": d.status,
+            "last_update": d.last_update.strftime("%H:%M %d-%m-%Y") 
+                if d.last_update else "-"
+        }
+        for d in devices
+    ]
+
+    return jsonify(result)
+
+
+@app.route("/api/devices/stats", methods=["GET"])
+def device_stats():
+    total = Device.query.count()
+    active = Device.query.filter_by(status="active").count()
+    inactive = total - active
+
+    return jsonify({
+        "total": total,
+        "active": active,
+        "inactive": inactive
+    })
+
+
+@app.route("/api/devices/update/<string:device_code>", methods=["PUT"])
+def update_device(device_code):
+    data = request.json
+
+    if not data or "status" not in data:
+        return jsonify({"error": "Status wajib diisi"}), 400
+
+    device = Device.query.filter_by(device_code=device_code).first()
+
+    if not device:
+        return jsonify({"error": "Device tidak ditemukan"}), 404
+
+    if data["status"] not in ["active", "inactive"]:
+        return jsonify({"error": "Status tidak valid"}), 400
+
+    device.status = data["status"]
+    db.session.commit()
+
+    return jsonify({"message": "Status berhasil diupdate"})
+
+
+with app.app_context():
+    db.create_all()
 
 if __name__ == "__main__":
     app.run(debug=True)
