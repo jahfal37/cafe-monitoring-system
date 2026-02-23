@@ -9,7 +9,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="min-h-screen bg-cafe-secondary font-sans">
-
     <nav class="bg-white border-b border-gray-100 px-6 py-4 shadow-sm">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -25,78 +24,30 @@
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-8 md:p-12">
-        <header class="mb-4">
-            <h1 class="text-3xl font-bold text-cafe-dark tracking-tight">Pilih Cafe</h1>
-            <p class="text-cafe-muted mt-2">Pilih cafe untuk melihat dashboard monitoringnya</p>
-        </header>
+   <main class="max-w-7xl mx-auto p-8 md:p-12">
 
-        <div class="flex justify-start">
-            <a href="add-cafe.html" class="mb-12 bg-cafe-primary hover:bg-cafe-accent text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-cafe-primary/20 transition-all active:scale-95 flex items-center gap-2 cursor-pointer">
-                Tambah Cafe
-            </a>
-        </div>
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold text-cafe-dark tracking-tight">
+            Pilih Cafe
+        </h1>
+        <p class="text-cafe-muted mt-2">
+            Pilih cafe untuk melihat dashboard monitoringnya
+        </p>
+    </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Daftar cafe yang terdaftar, tampilkan daftar cafe dari database -->
-            <div class="bg-white rounded-cafe shadow-cafe-card overflow-hidden border border-white transition-transform hover:scale-[1.02]">
-                <div class="bg-linear-to-br from-cafe-primary to-cafe-accent p-8 text-white relative">
-                    <i data-lucide="coffee" class="w-10 h-10 mb-4 opacity-80"></i>
-                    <!-- Nama cafe -->
-                    <h2 class="text-2xl font-bold">Kopi Kita</h2>
-                </div>
-                <div class="p-8 space-y-4">
-                    <div class="flex items-center gap-3 text-cafe-muted">
-                        <i data-lucide="map-pin" class="w-5 h-5 text-cafe-primary"></i>
-                        <!-- Alamat cafe -->
-                        <span class="text-sm font-medium">Jl. Sutomo</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-cafe-muted">
-                        <i data-lucide="clock" class="w-5 h-5 text-cafe-primary"></i>
-                        <!-- Jam operasional cafe -->
-                        <span class="text-sm font-medium">00:00 - 24:00</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-cafe-muted">
-                        <i data-lucide="users" class="w-5 h-5 text-cafe-primary"></i>
-                        <!-- Jumlah meja cafe -->
-                        <span class="text-sm font-medium">15 meja</span>
-                    </div>
-                    <div class="w-full mt-10 bg-slate-100 hover:bg-slate-200 text-cafe-dark font-bold py-3 rounded-xl transition-colors cursor-pointer">
-                        <a href="dashboard.html" class="flex items-center justify-center gap-2">
-                            Lihat Dashboard
-                        </a>
-                    </div>
-                </div>
-            </div>
+    <div class="flex justify-start mb-8">
+        <a href="add-cafe.html"
+           class="bg-cafe-primary hover:bg-cafe-accent text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2">
+            Tambah Cafe
+        </a>
+    </div>
 
-            <div class="bg-white rounded-cafe shadow-cafe-card overflow-hidden border border-white transition-transform hover:scale-[1.02]">
-                <div class="bg-linear-to-br from-cafe-primary to-cafe-accent p-8 text-white relative">
-                    <i data-lucide="coffee" class="w-10 h-10 mb-4 opacity-80"></i>
-                    <h2 class="text-2xl font-bold">Parewa Coffee</h2>
-                </div>
-                <div class="p-8 space-y-4">
-                    <div class="flex items-center gap-3 text-cafe-muted">
-                        <i data-lucide="map-pin" class="w-5 h-5 text-cafe-primary"></i>
-                        <span class="text-sm font-medium">Jl. Bandar Purus</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-cafe-muted">
-                        <i data-lucide="clock" class="w-5 h-5 text-cafe-primary"></i>
-                        <span class="text-sm font-medium">08:00 - 22:00</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-cafe-muted">
-                        <i data-lucide="users" class="w-5 h-5 text-cafe-primary"></i>
-                        <span class="text-sm font-medium">12 meja</span>
-                    </div>
-                    <div class="w-full mt-10 bg-slate-100 hover:bg-slate-200 text-cafe-dark font-bold py-3 rounded-xl transition-colors cursor-pointer">
-                        <a href="dashboard.html" class="flex items-center justify-center gap-2">
-                            Lihat Dashboard
-                        </a>
-                    </div>
-                </div>
-            </div>
+    <!-- INI TEMPAT CARD DINAMIS DARI JS -->
+    <div id="cafeList"
+         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    </div>
 
-        </div>
-    </main>
+</main>
 
     <div id="logoutModal" class="fixed inset-0 z-50 items-center justify-center hidden p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
@@ -126,5 +77,6 @@
     <script>
         lucide.createIcons();
     </script>
+    <script src="js/select-cafe.js"></script>
 </body>
 </html>

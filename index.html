@@ -1,76 +1,84 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Cafe Monitoring System</title>
-    <link rel="stylesheet" href="view/src/style.css">
+    <link rel="stylesheet" href="view/src/style.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-<body class="min-h-screen flex items-center justify-center bg-cafe-secondary p-4">
+  </head>
+  <body
+    class="min-h-screen flex items-center justify-center bg-cafe-secondary p-4"
+  >
+    <div
+      class="bg-white p-8 md:p-12 rounded-cafe shadow-cafe-card w-full max-w-120 border border-white"
+    >
+      <div class="flex flex-col items-center mb-10 text-center">
+        <div class="bg-cafe-primary p-4 rounded-full mb-6 shadow-md text-white">
+          <i data-lucide="coffee" style="width: 32px; height: 32px"></i>
+        </div>
+        <h1 class="text-3xl font-bold text-cafe-dark tracking-tight">
+          Cafe Monitoring System
+        </h1>
+        <p class="text-cafe-muted mt-2 font-medium">
+          Sign in ke akun Bapenda atau akun cafe mu
+        </p>
+      </div>
 
-    <div class="bg-white p-8 md:p-12 rounded-cafe shadow-cafe-card w-full max-w-120 border border-white">
-        
-        <div class="flex flex-col items-center mb-10 text-center">
-            <div class="bg-cafe-primary p-4 rounded-full mb-6 shadow-md text-white">
-                <i data-lucide="coffee" style="width: 32px; height: 32px;"></i>
-            </div>
-            <h1 class="text-3xl font-bold text-cafe-dark tracking-tight">
-                Cafe Monitoring System
-            </h1>
-            <p class="text-cafe-muted mt-2 font-medium">
-                Sign in ke akun Bapenda atau akun cafe mu
-            </p>
+      <!-- Form Login -->
+      <form id="loginForm" class="space-y-6">
+        <div>
+          <label class="block text-sm font-semibold text-cafe-dark mb-2">
+            Username
+          </label>
+          <div class="relative group">
+            <span
+              class="absolute inset-y-0 left-0 flex items-center pl-4 text-cafe-border group-focus-within:text-cafe-primary transition-colors"
+            >
+              <i data-lucide="user" style="width: 20px; height: 20px"></i>
+            </span>
+            <!-- Input username, pastikan bisa memasukkan akun cafe dan bapenda-->
+            <input
+              id="username"
+              type="text"
+              placeholder="Masukkan username"
+              class="w-full pl-12 pr-4 py-3.5 bg-white border border-cafe-border rounded-xl"
+            />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-cafe-dark mb-2">
+            Password
+          </label>
+          <div class="relative group">
+            <span
+              class="absolute inset-y-0 left-0 flex items-center pl-4 text-cafe-border group-focus-within:text-cafe-primary transition-colors"
+            >
+              <i data-lucide="lock" style="width: 20px; height: 20px"></i>
+            </span>
+            <!-- Input passwrod, pastikan password diperiksa apakah benar atau tidak -->
+           <input
+    id="password"
+    type="password"
+    placeholder="Masukkan password"
+    class="w-full pl-12 pr-4 py-3.5 bg-white border border-cafe-border rounded-xl"
+/>
+          </div>
         </div>
 
-        <!-- Form Login -->
-        <form action="#" class="space-y-6">
-            <div>
-                <label class="block text-sm font-semibold text-cafe-dark mb-2">
-                    Username
-                </label>
-                <div class="relative group">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-cafe-border group-focus-within:text-cafe-primary transition-colors">
-                        <i data-lucide="user" style="width: 20px; height: 20px;"></i>
-                    </span>
-                    <!-- Input username, pastikan bisa memasukkan akun cafe dan bapenda-->
-                    <input
-                        type="text"
-                        placeholder="Masukkan username"
-                        class="w-full pl-12 pr-4 py-3.5 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all placeholder:text-cafe-border"
-                    >
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-cafe-dark mb-2">
-                    Password
-                </label>
-                <div class="relative group">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-cafe-border group-focus-within:text-cafe-primary transition-colors">
-                        <i data-lucide="lock" style="width: 20px; height: 20px;"></i>
-                    </span>
-                    <!-- Input passwrod, pastikan password diperiksa apakah benar atau tidak -->
-                    <input
-                        type="password"
-                        placeholder="Masukkan password"
-                        class="w-full pl-12 pr-4 py-3.5 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all placeholder:text-cafe-border"
-                    >
-                </div>
-            </div>
-
-            <!-- Tombol sign in, jika username atau password salah maka perlu menampilkan pesan error -->
-            <button
-                type="submit"
-                onclick="window.location.href='view/bapenda/select-cafe.html'; return false;"
-                class="w-full bg-cafe-primary hover:bg-cafe-accent text-white font-bold py-4 rounded-xl shadow-lg shadow-cafe-primary/20 transition-all active:scale-[0.98] mt-4 cursor-pointer"
-            >
-                Sign In
-            </button>
-        </form>
+        <!-- Tombol sign in, jika username atau password salah maka perlu menampilkan pesan error -->
+        <button
+    type="submit"
+    class="w-full bg-cafe-primary hover:bg-cafe-accent text-white font-bold py-4 rounded-xl shadow-lg"
+>
+    Sign In
+</button>
+      </form>
     </div>
 
     <script>
       lucide.createIcons();
     </script>
-</body>
+    <script src="view/bapenda/js/login.js"></script>
+  </body>
 </html>
