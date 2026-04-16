@@ -21,81 +21,139 @@
 
     <main class="max-w-4xl mx-auto p-6 md:p-12">
         <div class="bg-white rounded-cafe shadow-cafe-card p-8 md:p-12 border border-white">
-            <form action="#" class="space-y-8">
-                <!-- Form untuk menambah cafe, informasi cafe akan tersimpan di database -->
-                <div>
-                    <!-- Nama cafe -->
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Nama cafe</label>
-                    <input type="text" placeholder="Masukkan nama cafe yang baru" 
-                           class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
-                </div>
+<form id="editForm" class="space-y-8">
 
-                <div>
-                    <!-- Alamat cafe -->
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Alamat</label>
-                    <textarea placeholder="Masukkan alamat cafe yang baru" rows="4"
-                              class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all resize-none"></textarea>
-                </div>
+    <div>
+        <label class="block text-sm font-bold text-cafe-dark mb-3">Nama cafe</label>
+        <input type="text" id="name"
+               placeholder="Masukkan nama cafe yang baru"
+               class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
+    </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <!-- Jam buka cafe -->
-                        <label class="block text-sm font-bold text-cafe-dark mb-3">Jam Buka</label>
-                        <input type="time" class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
-                    </div>
-                    <div>
-                        <!-- Jam tutup cafe -->
-                        <label class="block text-sm font-bold text-cafe-dark mb-3">Jam Tutup</label>
-                        <input type="time" class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
-                    </div>
-                </div>
+    <div>
+        <label class="block text-sm font-bold text-cafe-dark mb-3">Alamat</label>
+        <textarea id="address"
+                  placeholder="Masukkan alamat cafe yang baru"
+                  rows="4"
+                  class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl resize-none"></textarea>
+    </div>
 
-                <div>
-                    <!-- Jumlah meja cafe -->
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Jumlah Meja</label>
-                    <input type="number" placeholder="Masukkan jumlah meja yang baru" 
-                               class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
-                </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label class="block text-sm font-bold text-cafe-dark mb-3">Jam Buka</label>
+            <input type="time" id="open_time"
+                   class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
+        </div>
+        <div>
+            <label class="block text-sm font-bold text-cafe-dark mb-3">Jam Tutup</label>
+            <input type="time" id="close_time"
+                   class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
+        </div>
+    </div>
 
-                <div>
-                    <!-- Jumlah kamera cafe -->
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Jumlah Kamera</label>
-                    <input type="number" placeholder="Masukkan jumlah kamera yang baru" 
-                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
-                </div>
+    <div>
+        <label class="block text-sm font-bold text-cafe-dark mb-3">Jumlah Meja</label>
+        <input type="number" id="table_count"
+               placeholder="Masukkan jumlah meja yang baru"
+               class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
+    </div>
 
+    <div>
+        <label class="block text-sm font-bold text-cafe-dark mb-3">Jumlah Kamera</label>
+        <input type="number" id="camera_count"
+               placeholder="Masukkan jumlah kamera yang baru"
+               class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
+    </div>
 
-                <div>
-                    <!-- Username untuk login cafe -->
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Username</label>
-                    <input type="text" placeholder="Masukkan username yang baru" 
-                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
-                </div>
+    <div>
+        <label class="block text-sm font-bold text-cafe-dark mb-3">Username</label>
+        <input type="text" id="username"
+               placeholder="Masukkan username yang baru"
+               class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
+    </div>
 
-                <div>
-                    <!-- Password untuk login cafe -->
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Password</label>
-                    <input type="password" placeholder="Masukkan password yang baru" 
-                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20 focus:border-cafe-primary transition-all">
-                </div>
+    <div>
+        <label class="block text-sm font-bold text-cafe-dark mb-3">Password</label>
+        <input type="password" id="password"
+               placeholder="Masukkan password yang baru"
+               class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
+    </div>
 
-                <div class="flex flex-col md:flex-row gap-4 pt-6">
-                    <button type="button" onclick="history.back()"
-                            class="flex-1 bg-white border-2 border-cafe-border hover:bg-gray-50 text-cafe-dark font-bold py-4 rounded-xl transition-all cursor-pointer">
-                        Batal
-                    </button>
+    <div class="flex flex-col md:flex-row gap-4 pt-6">
+        <button type="button" onclick="history.back()"
+                class="flex-1 bg-white border-2 border-cafe-border py-4 rounded-xl">
+            Batal
+        </button>
 
-                    <!-- Tombol submit. setelah tombol ditekan informasi akan masuk ke database -->
-                    <button type="submit" 
-                            class="flex-1 bg-cafe-primary hover:bg-cafe-accent text-white font-bold py-4 rounded-xl shadow-lg shadow-cafe-primary/20 transition-all active:scale-95 cursor-pointer">
-                        Update
-                    </button>
-                </div>
-            </form>
+        <button type="submit"
+                class="flex-1 bg-cafe-primary text-white py-4 rounded-xl">
+            Update
+        </button>
+    </div>
+
+</form>
         </div>
     </main>
     <script>
         lucide.createIcons();
     </script>
+<script>
+lucide.createIcons();
+
+const cafeId = localStorage.getItem("cafe_id");
+
+if (!cafeId) {
+    alert("Silakan login terlebih dahulu");
+    window.location.href = "/index.html";     
+}
+
+// Ambil data cafe
+window.addEventListener("load", function () {
+
+    fetch(`http://127.0.0.1:5000/api/cafes/${cafeId}`)
+        .then(res => res.json())
+        .then(data => {
+
+            document.getElementById("name").value = data.name;
+            document.getElementById("address").value = data.address;
+            document.getElementById("open_time").value = data.open_time;
+            document.getElementById("close_time").value = data.close_time;
+            document.getElementById("table_count").value = data.table_count;
+            document.getElementById("camera_count").value = data.camera_count;
+            document.getElementById("username").value = data.username;
+        })
+        .catch(err => console.error(err));
+});
+
+// Update
+document.getElementById("editForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const payload = {
+        name: document.getElementById("name").value,
+        address: document.getElementById("address").value,
+        open_time: document.getElementById("open_time").value,
+        close_time: document.getElementById("close_time").value,
+        table_count: document.getElementById("table_count").value,
+        camera_count: document.getElementById("camera_count").value,
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value
+    };
+
+    fetch(`http://127.0.0.1:5000/api/cafes/${cafeId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(response => {
+        alert(response.message);
+        window.location.href = "dashboard.html";
+    })
+    .catch(err => console.error(err));
+});
+</script>
 </body>
 </html>

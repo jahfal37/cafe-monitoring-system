@@ -41,7 +41,7 @@ async function loadCafes() {
                         </div>
 
                         <div class="w-full mt-6 bg-slate-100 hover:bg-slate-200 text-cafe-dark font-bold py-3 rounded-xl transition-colors cursor-pointer text-center"
-                             onclick="selectCafe(${cafe.id})">
+onclick="selectCafe('${cafe.id}')"
                             Lihat Dashboard
                         </div>
                     </div>
@@ -61,5 +61,10 @@ async function loadCafes() {
 
 function selectCafe(id) {
     localStorage.setItem("selectedCafe", id);
-    window.location.href = "dashboard.html";
+    window.location.href = "/view/bapenda/dashboard.html";
 }
+
+document.getElementById("confirmLogout").addEventListener("click", () => {
+    localStorage.clear();
+    window.location.href = "/index.html";
+});

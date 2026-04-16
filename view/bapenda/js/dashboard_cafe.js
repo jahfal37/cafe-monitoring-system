@@ -1,16 +1,15 @@
 let myChart;
-let selectedCafeId;
-
 
 window.addEventListener("load", function () {
 
-    selectedCafeId = localStorage.getItem("cafe_id");
+    const token = localStorage.getItem("token");
 
-    if (!selectedCafeId) {
-        alert("Cafe belum dipilih");
-        window.location.href = "select-cafe.html";
+    if (!token) {
+        alert("Silakan login terlebih dahulu");
+        window.location.href = "login.html";
         return;
     }
+
     initFilter();
 
     const monthSelect = document.getElementById("monthSelect");
@@ -49,8 +48,15 @@ function loadDashboard() {
 
     const bulan = document.getElementById("monthSelect").value;
     const tahun = document.getElementById("yearSelect").value;
+    const token = localStorage.getItem("token");
 
-    fetch(`http://127.0.0.1:5000/api/dashboard?cafe_id=${selectedCafeId}&bulan=${bulan}&tahun=${tahun}`)
+console.log("TOKEN:", localStorage.getItem("token"));
+
+    fetch(`http://127.0.0.1:5000/api/cafe/dashboard?bulan=${bulan}&tahun=${tahun}`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
         .then(res => res.json())
         .then(data => {
 
@@ -102,7 +108,7 @@ function loadDashboard() {
 
         })
         .catch(err => console.error("Error:", err));
-        
+
         document.addEventListener("DOMContentLoaded", () => {
     const cafeName = localStorage.getItem("user_name");
 

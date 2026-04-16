@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Kopi Kita</title> <!-- Ganti nama cafe jika cafe berbeda -->
+    <title>Dashboard - <h1 id="cafeName"></h1></title> <!-- Ganti nama cafe jika cafe berbeda -->
     <link rel="stylesheet" href="../src/style.css">
     <script type="module" src="../src/main.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -115,21 +115,36 @@
 
             <!-- Tabel Jumlah Pelanggan per Hari -->
             <div class="bg-white pb-8 rounded-cafe shadow-cafe-card border border-white overflow-hidden">
-                <div class="p-6 md:p-8 border-b border-gray-50 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                    <div class="min-w-0">
-                        <h3 class="font-bold text-cafe-dark text-lg truncate">Jumlah Pelanggan per Hari</h3>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span>Periode:</span>
-                        <div
-                            class="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium">
-                            <select id="monthSelect" class="bg-transparent focus:outline-none cursor-pointer">
-                            </select>
-                            <select id="yearSelect" class="bg-transparent focus:outline-none cursor-pointer">
-                            </select>
-                        </div>
-                    </div>
-                </div>
+<div class="p-6 md:p-8 border-b border-gray-50 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+    
+    <div class="min-w-0">
+        <h3 class="font-bold text-cafe-dark text-lg truncate">
+            Jumlah Pelanggan per Hari
+        </h3>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-4">
+
+        <!-- DROPDOWN PILIH CAFE (KHUSUS BAPENDA) -->
+        <div class="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium">
+            <span>Cafe:</span>
+            <select id="cafeSelect" class="bg-transparent focus:outline-none cursor-pointer">
+                <option value="">Pilih Cafe</option>
+            </select>
+        </div>
+
+        <!-- FILTER PERIODE -->
+        <div class="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium">
+            <span>Periode:</span>
+            <select id="monthSelect" class="bg-transparent focus:outline-none cursor-pointer">
+            </select>
+            <select id="yearSelect" class="bg-transparent focus:outline-none cursor-pointer">
+            </select>
+        </div>
+
+    </div>
+
+</div>
                 <div class="overflow-x-auto w-full px-4 md:px-8">
                     <table class="w-full text-center ">
                         <thead class="bg-gray-50 text-cafe-muted text-sm uppercase tracking-wider font-semibold">
@@ -169,7 +184,7 @@
                         class="flex-1 bg-gray-100 hover:bg-gray-200 text-cafe-dark font-bold py-3.5 rounded-xl transition-all cursor-pointer">
                         Batal
                     </button>
-                    <button onclick="window.location.href='../index.html'"
+                    <button onclick="window.location.href='/index.html'"
                         class="flex-1 bg-cafe-red hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-200 transition-all cursor-pointer">
                         Ya, Keluar
                     </button>
