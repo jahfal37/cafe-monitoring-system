@@ -102,12 +102,5 @@ function loadDashboard() {
 
         })
         .catch(err => console.error("Error:", err));
-        
-        document.addEventListener("DOMContentLoaded", () => {
-    const cafeName = localStorage.getItem("user_name");
 
-    if (cafeName) {
-        document.getElementById("cafeName").textContent = cafeName;
-    }
-});
-}
+       }

@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
             localStorage.setItem("cafe_id", data.user.id);
             localStorage.setItem("role", data.user.role);
             localStorage.setItem("user_name", data.user.name);
+            
 
             if (data.user.role === "cafe") {
                 window.location.href = "/view/cafe/dashboard.html";

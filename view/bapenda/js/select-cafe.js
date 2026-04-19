@@ -63,8 +63,3 @@ function selectCafe(id) {
     localStorage.setItem("selectedCafe", id);
     window.location.href = "/view/bapenda/dashboard.html";
 }
-
-document.getElementById("confirmLogout").addEventListener("click", () => {
-    localStorage.clear();
-    window.location.href = "/index.html";
-});

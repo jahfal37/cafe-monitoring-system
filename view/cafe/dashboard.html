@@ -3,11 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - <h1 id="cafeName"></h1></title>
+    <title id="pageTitle">Dashboard</title>
     <!-- Ganti nama cafe jika cafe berbeda -->
     <link rel="stylesheet" href="../src/style.css" />
     <script type="module" src="../src/main.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="js/dashboard.js"></script>
   </head>
 
   <body class="bg-cafe-secondary min-h-screen flex font-sans">
@@ -28,9 +29,9 @@
         </button>
         <div class="hidden sm:block leading-tight min-w-0">
           <!-- Ganti dengan nama cafe yang sesuai -->
-          <h2 class="font-bold text-sm text-cafe-dark truncate">Kopi Kita</h2>
+          <h2 id="cafeName" class="font-bold text-sm text-cafe-dark truncate">-</h2>
           <!-- Ganti dengan alamat cafe yang sesuai -->
-          <p class="text-[10px] text-cafe-muted truncate">Jl. Sutomo</p>
+          <p id="cafeAddress" class="text-[10px] text-cafe-muted truncate">-</p>
         </div>
       </div>
     </nav>
@@ -246,91 +247,5 @@
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-      let myChart;
-
-      window.addEventListener("load", function () {
-        const token = localStorage.getItem("token");
-        const cafeId = localStorage.getItem("cafe_id");
-
-        if (!token || !cafeId) {
-          alert("Silakan login terlebih dahulu");
-          window.location.href = "/index.html";
-          return;
-        }
-
-        const monthSelect = document.getElementById("monthSelect");
-        const yearSelect = document.getElementById("yearSelect");
-
-        const now = new Date();
-        const bulan = now.getMonth() + 1;
-        const tahun = now.getFullYear();
-
-        loadDashboard(cafeId, bulan, tahun);
-      });
-
-      function loadDashboard(cafeId, bulan, tahun) {
-fetch(`http://127.0.0.1:5000/api/cafe/dashboard?bulan=${bulan}&tahun=${tahun}`, {
-    headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`
-    }
-})
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.error) {
-              alert(data.error);
-              return;
-            }
-
-            document.getElementById("totalSaatIni").innerText =
-              data.total_saat_ini;
-            document.getElementById("rataRataBulan").innerText =
-              data.rata_rata_bulan;
-            document.getElementById("trenPelangganBulan").innerText =
-              data.bulan;
-            document.getElementById("trenPelangganTahun").innerText =
-              data.tahun;
-
-            const tbody = document.querySelector("tbody");
-            tbody.innerHTML = "";
-
-            data.data_harian.forEach((item) => {
-              tbody.innerHTML += `
-                    <tr>
-                        <td>${item.hari}</td>
-                        <td>${item.tanggal}</td>
-                        <td>${item.jumlah}</td>
-                    </tr>
-                `;
-            });
-
-            const ctx = document.getElementById("trenChart").getContext("2d");
-
-            if (myChart) myChart.destroy();
-
-            myChart = new Chart(ctx, {
-              type: "line",
-              data: {
-                labels: data.data_harian.map((d) => d.tanggal),
-                datasets: [
-                  {
-                    label: "Jumlah Pelanggan",
-                    data: data.data_harian.map((d) => d.jumlah),
-                    borderColor: "#F9B208",
-                    backgroundColor: "rgba(249,178,8,0.1)",
-                    fill: true,
-                    tension: 0.4,
-                  },
-                ],
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-              },
-            });
-          })
-          .catch((err) => console.error("Error:", err));
-      }
-    </script>
   </body>
 </html>

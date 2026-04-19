@@ -1,26 +1,32 @@
 import "./style.css";
 
-let sidebar, mainContent, toggleIcon;
-
 document.addEventListener("DOMContentLoaded", () => {
-  sidebar = document.getElementById("sidebar");
-  mainContent = document.getElementById("mainContent");
-  toggleIcon = document.getElementById("toggleIcon");
+  // ============================
+  // AMBIL ELEMENT (SAFE)
+  // ============================
+  const sidebar = document.getElementById("sidebar");
+  const mainContent = document.getElementById("mainContent");
+  const toggleIcon = document.getElementById("toggleIcon");
   const sidebarToggle = document.getElementById("sidebarToggle");
+
   const logoutBtn = document.getElementById("logoutBtn");
   const logoutModal = document.getElementById("logoutModal");
   const cancelLogout = document.getElementById("cancelLogout");
+
   const deleteAccountButtons = document.querySelectorAll("#deleteAccountButton");
   const deleteAccountModal = document.getElementById("deleteAccountModal");
-  const cancelDeleteAccountButton = document.getElementById(
-    "cancelDeleteAccountButton"
-  );
+  const cancelDeleteAccountButton = document.getElementById("cancelDeleteAccountButton");
 
-  // --- LOGIKA MODAL LOGOUT (Dengan Pengecekan Aman) ---
+  const monthSelect = document.getElementById("monthSelect");
+  const yearSelect = document.getElementById("yearSelect");
+
+  // ============================
+  // LOGOUT MODAL (SAFE)
+  // ============================
   if (logoutBtn && logoutModal) {
     logoutBtn.addEventListener("click", () => {
       logoutModal.classList.remove("hidden");
-      logoutModal.classList.add("flex"); // Tambahkan flex saat dibuka
+      logoutModal.classList.add("flex");
       document.body.style.overflow = "hidden";
     });
   }
@@ -28,29 +34,30 @@ document.addEventListener("DOMContentLoaded", () => {
   if (cancelLogout && logoutModal) {
     cancelLogout.addEventListener("click", () => {
       logoutModal.classList.add("hidden");
-      logoutModal.classList.remove("flex"); // Hapus flex saat ditutup
+      logoutModal.classList.remove("flex");
       document.body.style.overflow = "auto";
     });
   }
 
-  if (logoutModal) {
+  if (logoutModal && cancelLogout) {
     logoutModal.addEventListener("click", (e) => {
       if (e.target.classList.contains("bg-black/40")) {
-        // Cek klik pada overlay
         cancelLogout.click();
       }
     });
   }
 
-  // --- LOGIKA MODAL HAPUS AKUN (Dengan Pengecekan Aman) ---
-  deleteAccountButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      if (deleteAccountModal) {
+  // ============================
+  // DELETE ACCOUNT MODAL (SAFE)
+  // ============================
+  if (deleteAccountButtons.length && deleteAccountModal) {
+    deleteAccountButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
         deleteAccountModal.classList.remove("hidden");
         document.body.style.overflow = "hidden";
-      }
+      });
     });
-  });
+  }
 
   if (cancelDeleteAccountButton && deleteAccountModal) {
     cancelDeleteAccountButton.addEventListener("click", () => {
@@ -59,16 +66,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (deleteAccountModal) {
-    deleteAccountModal.addEventListener("click", (e) => {
-      if (e.target.classList.contains("bg-black/40")) {
-        // Cek klik pada overlay
-        cancelDeleteAccountButton.click();
-      }
-    });
-  }
-
-  // --- LOGIKA SIDEBAR ---
+  // ============================
+  // SIDEBAR TOGGLE (SAFE)
+  // ============================
   if (sidebarToggle && sidebar) {
     sidebarToggle.addEventListener("click", () => {
       const isMobile = window.innerWidth < 768;
@@ -95,18 +95,65 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const isHidden = sidebar.classList.contains("md:w-0");
-        if (toggleIcon)
+        if (toggleIcon) {
           toggleIcon.setAttribute("data-lucide", isHidden ? "menu" : "x");
+        }
       }
+
       if (window.lucide) lucide.createIcons();
     });
   }
+
+  // ============================
+  // DROPDOWN BULAN & TAHUN (SAFE)
+  // ============================
+  if (monthSelect && yearSelect) {
+    const tahunSekarang = new Date().getFullYear();
+    const bulanSekarang = new Date().getMonth() + 1;
+
+    const bulan = [
+      "Januari", "Februari", "Maret", "April",
+      "Mei", "Juni", "Juli", "Agustus",
+      "September", "Oktober", "November", "Desember"
+    ];
+
+    // Isi bulan
+    bulan.forEach((nama, index) => {
+      const option = document.createElement("option");
+      option.value = index + 1;
+      option.textContent = nama;
+
+      if (index + 1 === bulanSekarang) option.selected = true;
+
+      monthSelect.appendChild(option);
+    });
+
+    // Isi tahun
+    for (let i = tahunSekarang - 10; i <= tahunSekarang + 1; i++) {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = i;
+
+      if (i === tahunSekarang) option.selected = true;
+
+      yearSelect.appendChild(option);
+    }
+  }
+
+  // ============================
+  // INIT ICON
+  // ============================
   if (window.lucide) lucide.createIcons();
 });
 
-// Menangani perubahan ukuran layar (Resize)
+
+// ============================
+// RESIZE HANDLER (SAFE)
+// ============================
 window.addEventListener("resize", () => {
-  // Pastikan variabel sudah terisi sebelum manipulasi
+  const sidebar = document.getElementById("sidebar");
+  const mainContent = document.getElementById("mainContent");
+
   if (!sidebar || !mainContent) return;
 
   const isMobile = window.innerWidth < 768;
@@ -114,68 +161,16 @@ window.addEventListener("resize", () => {
   if (!isMobile) {
     sidebar.classList.remove("h-0", "h-fit", "opacity-0");
     sidebar.classList.add("md:w-72", "md:opacity-100", "opacity-100");
+
     mainContent.classList.add("md:ml-72");
     mainContent.classList.remove("ml-0");
   } else {
     sidebar.classList.remove("md:w-72", "md:opacity-100", "h-fit");
     sidebar.classList.add("h-0", "opacity-0");
+
     mainContent.classList.remove("md:ml-72");
     mainContent.classList.add("ml-0");
   }
+
   if (window.lucide) lucide.createIcons();
 });
-
-// --- LOGIKA DROPDOWN BULAN & TAHUN ---
-const monthSelect = document.getElementById("monthSelect");
-const yearSelect = document.getElementById("yearSelect");
-const tahunSekarang = new Date().getFullYear(); // Mendapatkan tahun saat ini
-const bulanSekarang = new Date().getMonth() + 1; // Mendapatkan bulan saat ini (0-11, jadi ditambah 1)
-
-const bulan = [
-  "Januari",
-  "Februari",
-  "Maret",
-  "April",
-  "Mei",
-  "Juni",
-  "Juli",
-  "Agustus",
-  "September",
-  "Oktober",
-  "November",
-  "Desember",
-];
-
-// Isi Bulan
-bulan.forEach((nama, index) => {
-  let option = document.createElement("option");
-  option.value = index + 1;
-  option.textContent = nama;
-  // Set default ke bulan saat ini
-  if (nama === bulan[bulanSekarang - 1]) option.selected = true;
-
-  monthSelect.appendChild(option);
-});
-
-// Menentukan rentang tahun (contoh: 5 tahun ke belakang hingga 2 tahun ke depan)
-const tahunMulai = tahunSekarang - 10;
-const tahunSelesai = tahunSekarang + 1;
-
-for (let i = tahunMulai; i <= tahunSelesai; i++) {
-  let option = document.createElement("option");
-  option.value = i;
-  option.textContent = i;
-
-  // Set default ke tahun sekarang
-  if (i === tahunSekarang) option.selected = true;
-
-  yearSelect.appendChild(option);
-}
-
-// Fungsi untuk mendapatkan jumlah hari dalam bulan tertentu
-function getDaysInMonth(month, year) {
-  return new Date(year, month, 0).getDate();
-}
-
-// Inisialisasi Ikon Lucide
-lucide.createIcons();

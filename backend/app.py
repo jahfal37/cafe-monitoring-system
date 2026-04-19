@@ -6,11 +6,13 @@ from flask_jwt_extended import (
     JWTManager,
     create_access_token,
     jwt_required,
-    get_jwt_identity
+    get_jwt_identity,
+    get_jwt
 )
 
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, db
+
 
 
 # =====================================================
@@ -19,10 +21,9 @@ from firebase_admin import credentials, firestore
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"])
 
-app.config["JWT_SECRET_KEY"] = "super-secret-key"
+app.config["JWT_SECRET_KEY"] = "super-secret-key-yang-panjang-minimal-32-karakter"
 
 jwt = JWTManager(app)
-
 
 # =====================================================
 # FIREBASE INIT
@@ -31,7 +32,6 @@ cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
 
 db = firestore.client()
-
 
 # =====================================================
 # HELPER
@@ -47,7 +47,6 @@ hari_list = [
     "Jumat", "Sabtu", "Minggu"
 ]
 
-
 # =====================================================
 # ROOT
 # =====================================================
@@ -55,16 +54,12 @@ hari_list = [
 def home():
     return "Backend Aktif"
 
-
 # =====================================================
 # LOGIN
 # =====================================================
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.json
-
-    if not data.get("username") or not data.get("password"):
-        return jsonify({"error": "Username dan password wajib diisi"}), 400
 
     docs = db.collection("cafes")\
         .where("username", "==", data["username"])\
@@ -80,14 +75,11 @@ def login():
         return jsonify({"error": "Login gagal"}), 401
 
     access_token = create_access_token(
-        identity={
-            "id": cafe_doc.id,
-            "role": cafe["role"]
-        }
+        identity=cafe_doc.id,
+        additional_claims={"role": cafe["role"]}
     )
 
     return jsonify({
-        "message": "Login berhasil",
         "access_token": access_token,
         "user": {
             "id": cafe_doc.id,
@@ -96,16 +88,12 @@ def login():
         }
     })
 
-
 # =====================================================
 # TAMBAH DATA PELANGGAN
 # =====================================================
 @app.route("/api/tambah", methods=["POST"])
 def tambah():
     data = request.json
-
-    if not data.get("cafe_id") or not data.get("jumlah"):
-        return jsonify({"error": "cafe_id dan jumlah wajib diisi"}), 400
 
     today = date.today()
 
@@ -119,15 +107,19 @@ def tambah():
 
     return jsonify({"message": "Data berhasil disimpan"})
 
-
 # =====================================================
 # DASHBOARD CAFE
 # =====================================================
 @app.route("/api/cafe/dashboard")
 @jwt_required()
 def dashboard_cafe():
-    user = get_jwt_identity()
-    cafe_id = user["id"]
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+
+    if claims["role"] != "cafe":
+        return jsonify({"error": "Akses ditolak"}), 403
+
+    print("DEBUG LOGIN ID:", user_id)
 
     bulan = request.args.get("bulan")
     tahun = request.args.get("tahun")
@@ -137,7 +129,7 @@ def dashboard_cafe():
     tahun = int(tahun) if tahun else now.year
 
     docs = db.collection("pelanggan")\
-        .where("cafe_id", "==", cafe_id)\
+        .where("cafe_id", "==", user_id)\
         .where("bulan", "==", bulan)\
         .where("tahun", "==", tahun)\
         .stream()
@@ -154,6 +146,8 @@ def dashboard_cafe():
             "jumlah": item["jumlah"]
         })
 
+    print("JUMLAH DATA:", len(data))
+
     total = sum(x["jumlah"] for x in data)
     rata = round(total / len(data)) if data else 0
 
@@ -165,16 +159,15 @@ def dashboard_cafe():
         "data_harian": data
     })
 
-
 # =====================================================
 # DASHBOARD BAPENDA
 # =====================================================
 @app.route("/api/bapenda/dashboard/<string:cafe_id>")
 @jwt_required()
 def dashboard_bapenda(cafe_id):
-    user = get_jwt_identity()
+    claims = get_jwt()
 
-    if user["role"] != "bapenda":
+    if claims["role"] != "bapenda":
         return jsonify({"error": "Akses ditolak"}), 403
 
     bulan = request.args.get("bulan")
@@ -213,121 +206,48 @@ def dashboard_bapenda(cafe_id):
         "data_harian": data
     })
 
+# =====================================================
+# REGISTER BAPENDA
+# =====================================================
 @app.route("/api/register-bapenda", methods=["POST"])
 def register_bapenda():
     data = request.json
 
-    if not data.get("username") or not data.get("password"):
-        return jsonify({"error": "Username dan password wajib diisi"}), 400
-
-    existing = db.collection("cafes")\
-        .where("username", "==", data["username"])\
-        .get()
-
-    if existing:
-        return jsonify({"error": "Username sudah digunakan"}), 400
-
     doc_ref = db.collection("cafes").document()
 
     doc_ref.set({
-        "name": data.get("name", "Admin Bapenda"),
+        "name": "Admin Bapenda",
         "username": data["username"],
         "password": generate_password_hash(data["password"]),
-        "role": "bapenda",
-        "address": "-",
-        "open_time": "-",
-        "close_time": "-",
-        "table_count": 0,
-        "camera_count": 0,
-        "created_at": datetime.utcnow()
+        "role": "bapenda"
     })
 
-    return jsonify({
-        "message": "Akun bapenda berhasil dibuat",
-        "id": doc_ref.id
-    }), 201
-
-# =====================================================
-# DEVICE
-# =====================================================
-@app.route("/api/devices", methods=["POST"])
-def add_device():
-    data = request.json
-
-    if not data.get("cafe_id") or not data.get("device_code"):
-        return jsonify({"error": "Data tidak lengkap"}), 400
-
-    db.collection("devices").add({
-        "cafe_id": data["cafe_id"],
-        "device_code": data["device_code"],
-        "status": data.get("status", "inactive"),
-        "created_at": datetime.utcnow()
-    })
-
-    return jsonify({"message": "Device berhasil ditambahkan"})
-
-
-@app.route("/api/devices/stats/<string:cafe_id>", methods=["GET"])
-def device_stats(cafe_id):
-    docs = db.collection("devices")\
-        .where("cafe_id", "==", cafe_id)\
-        .stream()
-
-    devices = [doc.to_dict() for doc in docs]
-
-    total = len(devices)
-    active = len([d for d in devices if d["status"] == "active"])
-    inactive = total - active
-
-    return jsonify({
-        "total": total,
-        "active": active,
-        "inactive": inactive
-    })
-
-
-@app.route("/api/devices/update/<string:device_code>", methods=["PUT"])
-def update_device(device_code):
-    data = request.json
-
-    if "status" not in data:
-        return jsonify({"error": "Status wajib diisi"}), 400
-
-    if data["status"] not in ["active", "inactive"]:
-        return jsonify({"error": "Status tidak valid"}), 400
-
-    docs = db.collection("devices")\
-        .where("device_code", "==", device_code)\
-        .get()
-
-    if not docs:
-        return jsonify({"error": "Device tidak ditemukan"}), 404
-
-    docs[0].reference.update({
-        "status": data["status"]
-    })
-
-    return jsonify({"message": "Status berhasil diupdate"})
+    return jsonify({"message": "Bapenda dibuat"})
 
 
 # =====================================================
 # CAFE CRUD
 # =====================================================
-@app.route("/api/cafes", methods=["GET"])
-def get_cafes():
-    docs = db.collection("cafes").stream()
+@app.route("/api/cafes/<string:cafe_id>", methods=["GET"])
+@jwt_required()
+def get_cafe(cafe_id):
+    user_id = get_jwt_identity()
 
-    result = []
+    # 🔒 pastikan hanya cafe sendiri
+    if user_id != cafe_id:
+        return jsonify({"error": "Akses ditolak"}), 403
 
-    for doc in docs:
-        cafe = doc.to_dict()
-        cafe["id"] = doc.id
+    doc = db.collection("cafes").document(cafe_id).get()
 
-        cafe.pop("password", None)
+    if not doc.exists:
+        return jsonify({"error": "Cafe tidak ditemukan"}), 404
 
-        result.append(cafe)
+    cafe = doc.to_dict()
+    cafe["id"] = doc.id
 
-    return jsonify(result)
+    cafe.pop("password", None)
+
+    return jsonify(cafe)
 
 
 @app.route("/api/cafes", methods=["POST"])
@@ -376,23 +296,15 @@ def add_cafe():
     }), 201
 
 
-@app.route("/api/cafes/<string:cafe_id>", methods=["GET"])
-def get_cafe(cafe_id):
-    doc = db.collection("cafes").document(cafe_id).get()
-
-    if not doc.exists:
-        return jsonify({"error": "Cafe tidak ditemukan"}), 404
-
-    cafe = doc.to_dict()
-    cafe["id"] = doc.id
-
-    cafe.pop("password", None)
-
-    return jsonify(cafe)
-
-
 @app.route("/api/cafes/<string:cafe_id>", methods=["PUT"])
+@jwt_required()
 def update_cafe(cafe_id):
+    user_id = get_jwt_identity()
+
+    # 🔒 hanya boleh edit cafe sendiri
+    if user_id != cafe_id:
+        return jsonify({"error": "Akses ditolak"}), 403
+
     data = request.json
 
     doc_ref = db.collection("cafes").document(cafe_id)
@@ -400,24 +312,238 @@ def update_cafe(cafe_id):
     if not doc_ref.get().exists:
         return jsonify({"error": "Cafe tidak ditemukan"}), 404
 
-    update_data = {
-        "name": data["name"],
-        "address": data["address"],
-        "open_time": data["open_time"],
-        "close_time": data["close_time"],
-        "table_count": int(data["table_count"]),
-        "camera_count": int(data["camera_count"]),
-        "username": data["username"]
-    }
+    try:
+        update_data = {
+            "name": data.get("name", ""),
+            "address": data.get("address", ""),
+            "open_time": data.get("open_time", ""),
+            "close_time": data.get("close_time", ""),
+            "table_count": int(data.get("table_count", 0)),
+            "camera_count": int(data.get("camera_count", 0)),
+            "username": data.get("username", "")
+        }
 
-    if data.get("password"):
-        update_data["password"] = generate_password_hash(data["password"])
+        # update password kalau diisi
+        if data.get("password"):
+            update_data["password"] = generate_password_hash(data["password"])
 
-    doc_ref.update(update_data)
+        doc_ref.update(update_data)
 
-    return jsonify({"message": "Cafe berhasil diupdate"})
+        return jsonify({"message": "Cafe berhasil diupdate"})
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+# =====================================================
+# DUMMY GENERATOR
+# =====================================================
+
+@app.route("/api/seed-pelanggan", methods=["POST"])
+def seed_pelanggan():
+    try:
+        data = request.get_json()
+
+        cafe_id = data.get("cafe_id")
+        records = data.get("records")
+
+        if not cafe_id or not records:
+            return jsonify({
+                "error": "cafe_id dan records wajib diisi"
+            }), 400
+
+        inserted = 0
+
+        for item in records:
+            if not item.get("tanggal") or not item.get("jumlah"):
+                continue
+
+            tanggal_obj = datetime.strptime(item["tanggal"], "%Y-%m-%d")
+
+            db.collection("pelanggan").add({
+                "cafe_id": cafe_id,
+                "tanggal": item["tanggal"],
+                "bulan": tanggal_obj.month,
+                "tahun": tanggal_obj.year,
+                "jumlah": int(item["jumlah"])
+            })
+
+            inserted += 1
+
+        return jsonify({
+            "message": f"{inserted} data berhasil ditambahkan"
+        }), 201
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
+
+# ============================
+# GET SERVICES
+# ============================
+@app.route("/api/services", methods=["GET"])
+@jwt_required()
+def get_services():
+    try:
+        cafe_id = get_jwt_identity()
+        tanggal = request.args.get("tanggal")
+
+        print("=== DEBUG SERVICES ===")
+        print("JWT ID:", cafe_id)
+        print("TANGGAL:", tanggal)
+
+        if not tanggal:
+            return jsonify({"error": "Tanggal wajib diisi"}), 400
+
+        # 🔥 Query hanya cafe_id dulu (untuk hindari index issue)
+        docs = db.collection("services")\
+            .where("cafe_id", "==", cafe_id)\
+            .stream()
+
+        data = []
+        total_wait = 0
+        max_wait = 0
+        long_wait_count = 0
+
+        for doc in docs:
+            item = doc.to_dict()
+
+            # 🔥 filter tanggal di python (AMAN dari masalah index)
+            if item.get("tanggal") != tanggal:
+                continue
+
+            print("DATA MASUK:", item)
+
+            data.append(item)
+            waiting = int(item.get("waiting_time", 0))
+            total_wait += waiting
+
+            if waiting > max_wait:
+                max_wait = waiting
+
+            if item.get("status") == "long":
+                long_wait_count += 1
+
+        rata = round(total_wait / len(data)) if data else 0
+
+        print("TOTAL DATA:", len(data))
+
+        return jsonify({
+            "rata_rata": rata,
+            "terlama": max_wait,
+            "long_wait": long_wait_count,
+            "data": data
+        })
+
+    except Exception as e:
+        print("ERROR SERVICES:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+# ============================
+# POST SERVICES
+# ============================
+@app.route("/api/services", methods=["POST"])
+@jwt_required()
+def add_service():
+    data = request.json
+
+    required = [
+        "cafe_id",
+        "customer_code",
+        "table_number",
+        "waiting_time",
+        "tanggal"
+    ]
+
+    if not all(k in data for k in required):
+        return jsonify({"error": "Field tidak lengkap"}), 400
+
+    status = "long" if int(data["waiting_time"]) >= 30 else "normal"
+
+    db.collection("services").add({
+        "cafe_id": data["cafe_id"],
+        "customer_code": data["customer_code"],
+        "table_number": data["table_number"],
+        "waiting_time": int(data["waiting_time"]),
+        "status": status,
+        "tanggal": data["tanggal"]
+    })
+
+    return jsonify({"message": "Data service berhasil ditambahkan"})
+
+# ============================
+# GET DEVICES
+# ============================
+@app.route("/api/devices", methods=["GET"])
+@jwt_required()
+def get_devices():
+    cafe_id = get_jwt_identity()
+
+    docs = db.collection("devices")\
+        .where("cafe_id", "==", cafe_id)\
+        .stream()
+
+    data = []
+    active = 0
+
+    for doc in docs:
+        item = doc.to_dict()
+        data.append(item)
+
+        if item.get("status") == "active":
+            active += 1
+
+    total = len(data)
+    inactive = total - active
+
+    return jsonify({
+        "total": total,
+        "active": active,
+        "inactive": inactive,
+        "devices": data
+    })
+
+# ============================
+# POST DEVICES
+# ============================
+@app.route("/api/devices", methods=["POST"])
+@jwt_required()
+def add_device():
+    cafe_id = get_jwt_identity()
+    data = request.json
+
+    if not data.get("device_code"):
+        return jsonify({"error": "device_code wajib"}), 400
+
+    db.collection("devices").add({
+        "cafe_id": cafe_id,
+        "device_code": data["device_code"],
+        "status": "inactive",
+        "last_update": datetime.utcnow().isoformat()
+    })
+
+    return jsonify({"message": "Device ditambahkan"})
+    
+# ============================
+# PUT DEVICES YOLO
+# ============================
+@app.route("/api/devices/<string:device_code>", methods=["PUT"])
+def update_device(device_code):
+    data = request.json
+
+    docs = db.collection("devices")\
+        .where("device_code", "==", device_code)\
+        .get()
+
+    if not docs:
+        return jsonify({"error": "Device tidak ditemukan"}), 404
+
+    docs[0].reference.update({
+        "status": data["status"],
+        "last_update": datetime.utcnow().isoformat()
+    })
+
+    return jsonify({"message": "Status diupdate"})
 
 # =====================================================
 # RUN APP

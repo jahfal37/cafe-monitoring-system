@@ -83,7 +83,7 @@
                         <i data-lucide="camera" class="w-8 h-8"></i>
                     </div>
                     <div class="text-right">
-                        <span class="text-4xl font-black text-cafe-dark">3</span>
+                        <span id="totalCamera" class="text-4xl font-black text-cafe-dark">0</span>
                         <!-- Jumlah kamera yang terpasang di cafe, pastikan jumlah kamera sesuai dengan data yang tersimpan di database -->
                         <p class="text-xs text-cafe-muted font-medium mt-1 uppercase tracking-wider">Total Kamera</p>
                     </div>
@@ -93,7 +93,7 @@
                         <i data-lucide="check-circle" class="w-8 h-8"></i>
                     </div>
                     <div class="text-right">
-                        <span class="text-4xl font-black text-cafe-dark">2</span>
+                        <span id="activeCamera" class="text-4xl font-black text-cafe-dark">0</span>
                         <!-- Jumlah kamera yang aktif di cafe, status aktif kamera akan ditentukan di algoritma deteksi -->
                         <p class="text-xs text-cafe-muted font-medium mt-1 uppercase tracking-wider">Kamera Aktif</p>
                     </div>
@@ -103,7 +103,7 @@
                         <i data-lucide="x-circle" class="w-8 h-8"></i>
                     </div>
                     <div class="text-right">
-                        <span class="text-4xl font-black text-cafe-dark">1</span>
+                        <span id="inactiveCamera" class="text-4xl font-black text-cafe-dark">0</span>
                         <!-- Jumlah kamera yang nonaktif di cafe, status nonaktif kamera akan ditentukan di algoritma deteksi -->
                         <p class="text-xs text-cafe-muted font-medium mt-1 uppercase tracking-wider">Kamera Nonaktif</p>
                     </div>
@@ -123,29 +123,8 @@
                                 <th class="px-8 py-4 text-right">Terakhir Diperbarui</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <!-- Daftar kamera yang terpasang di cafe, ambil dari database -->
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-8 py-5 text-cafe-dark font-medium">CAM-01</td>
-                                <td class="px-8 py-5 text-center">
-                                    <span class="px-6 py-1.5 rounded-full bg-cafe-green-nonaktive text-cafe-green text-sm font-bold">Aktif</span>
-                                </td>
-                                <td class="px-8 py-5 text-right text-cafe-muted">01:06 AM</td>
-                            </tr>
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-8 py-5 text-cafe-dark font-medium">CAM-02</td>
-                                <td class="px-8 py-5 text-center">
-                                    <span class="px-6 py-1.5 rounded-full bg-cafe-green-nonaktive text-cafe-green text-sm font-bold">Aktif</span>
-                                </td>
-                                <td class="px-8 py-5 text-right text-cafe-muted">01:06 AM</td>
-                            </tr>
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-8 py-5 text-cafe-dark font-medium">CAM-05</td>
-                                <td class="px-8 py-5 text-center">
-                                    <span class="px-6 py-1.5 rounded-full bg-cafe-red-nonaktive text-cafe-red text-sm font-bold">Nonaktif</span>
-                                </td>
-                                <td class="px-8 py-5 text-right text-cafe-muted">01:06 AM</td>
-                            </tr>
+                        <tbody class="divide-y divide-gray-100" id="deviceTable">
+                            <!-- data dari JS -->
                         </tbody>
                     </table>
                 </div>
@@ -186,5 +165,7 @@
     <script>
         lucide.createIcons();
     </script>
+
+    <script src="/view/cafe/js/devices.js"></script>
 </body>
 </html>

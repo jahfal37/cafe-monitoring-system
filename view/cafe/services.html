@@ -4,13 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Kopi Kita</title> <!-- Ganti nama cafe jika cafe berbeda -->
+    <title>Dashboard - Kopi Kita</title>
     <link rel="stylesheet" href="../src/style.css">
-    <script type="module" src="../src/main.js"></script>
+
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body class="bg-cafe-secondary min-h-screen flex font-sans">
+
     <!-- Navbar -->
     <nav
         class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center z-50 shadow-sm">
@@ -19,9 +20,7 @@
                 <i data-lucide="menu" id="toggleIcon" class="w-6 h-6 text-cafe-dark"></i>
             </button>
             <div class="flex-1 truncate gap-3 leading-tight min-w-0">
-                <!-- Ganti dengan nama cafe yang sesuai -->
                 <h2 class="font-bold text-sm text-cafe-dark truncate">Kopi Kita</h2>
-                <!-- Ganti dengan alamat cafe yang sesuai -->
                 <p class="text-[10px] text-cafe-muted truncate">Jl. Sutomo</p>
             </div>
         </div>
@@ -78,28 +77,26 @@
 
             <div class="flex items-center gap-4 mb-8">
                 <span class="font-bold text-cafe-dark">Pilih tanggal:</span>
-                <input type="date" value="2026-02-12" class="px-4 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20">
+                <input type="date" class="px-4 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20">
             </div>
 
-            <!-- Informasi waiting time pelanggan -->
+            <!-- CARD -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white p-10 rounded-cafe shadow-cafe-card border border-white text-center">
                     <p class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider">Rata - rata Waktu Tunggu</p>
-                    <!-- Ganti dengan data rata-rata waktu tunggu pelanggan pada cafe terkait -->
                     <span class="text-4xl font-black text-cafe-dark">24 Menit</span>
                 </div>
                 <div class="bg-white p-10 rounded-cafe shadow-cafe-card border border-white text-center">
                     <p class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider">Waktu Tunggu Terlama</p>
-                    <!-- Ganti dengan waktu tunggu terlama pelanggan pada cafe terkait -->
                     <span class="text-4xl font-black text-cafe-dark">40 Menit</span>
                 </div>
                 <div class="bg-white p-10 rounded-cafe shadow-cafe-card border border-white text-center">
                     <p class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider">Jumlah Kasus Long Wait</p>
-                    <!-- Ganti dengan jumlah kasus waiting lama pelanggan pada cafe terkait -->
                     <span class="text-4xl font-black text-cafe-dark">5 Kasus</span>
                 </div>
             </div>
 
+            <!-- TABLE -->
             <div class="bg-white rounded-cafe shadow-cafe-card border border-white overflow-hidden p-8">
                 <h3 class="font-bold text-cafe-dark text-xl mb-8">Waktu Tunggu Pelanggan</h3>
                 <div class="overflow-x-auto">
@@ -112,68 +109,20 @@
                                 <th class="px-6 py-4 text-center">Status</th>
                             </tr>
                         </thead>
+
+                        <!-- ✅ HANYA INI YANG DIUBAH (hapus dummy) -->
                         <tbody class="divide-y divide-gray-50 text-cafe-dark font-medium">
-                            <tr>
-                                <!-- Ganti dengan nomor pelanggan yang sesuai -->
-                                <td class="px-6 py-5">C1</td>
-                                <!-- Ganti dengan nomor meja yang sesuai -->
-                                <td class="px-6 py-5">T1</td>
-                                <!-- Ganti dengan waktu tunggu pelanggan yang sesuai -->
-                                <td class="px-6 py-5">40 Menit</td>
-                                <td class="px-6 py-5 text-center">
-                                    <!-- Ganti dengan status pelanggan -->
-                                    <span class="px-6 py-1.5 rounded-full bg-cafe-red-nonaktive text-cafe-red text-sm font-bold">Long wait</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <!-- Ganti dengan nomor pelanggan yang sesuai -->
-                                <td class="px-6 py-5">C6</td>
-                                <!-- Ganti dengan nomor meja yang sesuai -->
-                                <td class="px-6 py-5">T3</td>
-                                <!-- Ganti dengan waktu tunggu pelanggan yang sesuai -->
-                                <td class="px-6 py-5">14 Menit</td>
-                                <td class="px-6 py-5 text-center">
-                                    <!-- Ganti dengan status pelanggan -->
-                                    <span class="px-6 py-1.5 rounded-full bg-cafe-green-nonaktive text-cafe-green text-sm font-bold">Normal</span>
-                                </td>
-                            </tr>
                         </tbody>
+
                     </table>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Modal Logout -->
-    <div id="logoutModal" class="fixed inset-0 z-50 items-center justify-center hidden p-4">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-
-        <div
-            class="relative bg-white rounded-cafe shadow-2xl w-full max-w-md p-8 overflow-hidden border border-white transform transition-all">
-            <div class="flex flex-col items-center text-center">
-                <div class="bg-cafe-red-nonaktive p-4 rounded-full mb-6 text-cafe-red">
-                    <i data-lucide="alert-triangle" class="w-10 h-10"></i>
-                </div>
-
-                <h3 class="text-2xl font-bold text-cafe-dark mb-2">Konfirmasi Logout</h3>
-                <p class="text-cafe-muted mb-8 leading-relaxed">
-                    Apakah Anda yakin ingin keluar dari sistem? Anda harus login kembali untuk mengakses dashboard.
-                </p>
-
-                <div class="flex gap-4 w-full">
-                    <button id="cancelLogout"
-                        class="flex-1 bg-gray-100 hover:bg-gray-200 text-cafe-dark font-bold py-3.5 rounded-xl transition-all cursor-pointer">
-                        Batal
-                    </button>
-                    <button onclick="window.location.href='/index.html'"
-                        class="flex-1 bg-cafe-red hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-200 transition-all cursor-pointer">
-                        Ya, Keluar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
+
+<script src="/view/cafe/js/services.js"></script>
 
 </html>
