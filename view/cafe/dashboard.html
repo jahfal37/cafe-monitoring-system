@@ -4,9 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="pageTitle">Dashboard</title>
-    <!-- Ganti nama cafe jika cafe berbeda -->
     <link rel="stylesheet" href="../src/style.css" />
-    <script type="module" src="../src/main.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="js/dashboard.js"></script>
   </head>
@@ -29,7 +27,9 @@
         </button>
         <div class="hidden sm:block leading-tight min-w-0">
           <!-- Ganti dengan nama cafe yang sesuai -->
-          <h2 id="cafeName" class="font-bold text-sm text-cafe-dark truncate">-</h2>
+          <h2 id="cafeName" class="font-bold text-sm text-cafe-dark truncate">
+            -
+          </h2>
           <!-- Ganti dengan alamat cafe yang sesuai -->
           <p id="cafeAddress" class="text-[10px] text-cafe-muted truncate">-</p>
         </div>
@@ -39,15 +39,15 @@
     <!-- Sidebar -->
     <aside
       id="sidebar"
-      class="fixed top-16 left-0 w-full md:w-72 bg-white border-r border-gray-100 flex flex-col z-40 shadow-sm transition-all duration-300 h-0 md:h-[calc(100vh-64px)] opacity-0 md:opacity-100 overflow-y-auto md:overflow-visible"
+      class="fixed top-16 left-0 w-full md:w-72 bg-white border-r border-gray-100 flex flex-col z-40 shadow-sm md:h-[calc(100vh-64px)] overflow-y-auto"
     >
+      
       <div class="p-6 flex items-center gap-3 border-b border-gray-50">
         <div class="bg-cafe-primary p-2 rounded-lg text-white">
           <i data-lucide="coffee" class="w-5 h-5"></i>
         </div>
         <span class="font-bold text-lg text-cafe-dark"
-          >Cafe Monitoring System</span
-        >
+          >Cafe Monitoring System</span>
       </div>
 
       <nav class="flex-1 p-4 space-y-2">

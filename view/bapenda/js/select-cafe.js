@@ -1,14 +1,54 @@
 document.addEventListener("DOMContentLoaded", () => {
+
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    // 🔒 proteksi login
+    if (!token || role !== "bapenda") {
+        alert("Akses hanya untuk bapenda");
+        window.location.href = "/index.html";
+        return;
+    }
+
     loadCafes();
+
+    // logout
+    document.getElementById("logoutBtn")?.addEventListener("click", () => {
+        localStorage.clear();
+        window.location.href = "/index.html";
+    });
 });
 
+
+// ============================
+// LOAD DATA CAFE
+// ============================
 async function loadCafes() {
     try {
-        const response = await fetch("http://127.0.0.1:5000/api/cafes");
+
+        const response = await fetch("http://127.0.0.1:5000/api/bapenda/cafes", {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Gagal ambil data cafe");
+        }
+
         const cafes = await response.json();
 
         const container = document.getElementById("cafeList");
         container.innerHTML = "";
+
+        if (!cafes.length) {
+            container.innerHTML = `
+                <p class="text-center text-cafe-muted col-span-full">
+                    Tidak ada data cafe
+                </p>
+            `;
+            return;
+        }
 
         cafes.forEach(cafe => {
 
@@ -21,29 +61,34 @@ async function loadCafes() {
                     </div>
 
                     <div class="p-8 space-y-4">
+
                         <div class="flex items-center gap-3 text-cafe-muted">
                             <i data-lucide="map-pin" class="w-5 h-5 text-cafe-primary"></i>
-                            <span class="text-sm font-medium">${cafe.address}</span>
+                            <span class="text-sm font-medium">
+                                ${cafe.address || "-"}
+                            </span>
                         </div>
 
                         <div class="flex items-center gap-3 text-cafe-muted">
                             <i data-lucide="clock" class="w-5 h-5 text-cafe-primary"></i>
                             <span class="text-sm font-medium">
-                                ${cafe.open_time} - ${cafe.close_time}
+                                ${cafe.open_time || "-"} - ${cafe.close_time || "-"}
                             </span>
                         </div>
 
                         <div class="flex items-center gap-3 text-cafe-muted">
                             <i data-lucide="users" class="w-5 h-5 text-cafe-primary"></i>
                             <span class="text-sm font-medium">
-                                ${cafe.table_count} meja
+                                ${cafe.table_count || 0} meja
                             </span>
                         </div>
 
-                        <div class="w-full mt-6 bg-slate-100 hover:bg-slate-200 text-cafe-dark font-bold py-3 rounded-xl transition-colors cursor-pointer text-center"
-onclick="selectCafe('${cafe.id}')"
+                        <button 
+                            onclick="selectCafe('${cafe.id}')"
+                            class="w-full mt-6 bg-slate-100 hover:bg-slate-200 text-cafe-dark font-bold py-3 rounded-xl transition-colors">
                             Lihat Dashboard
-                        </div>
+                        </button>
+
                     </div>
                 </div>
             `;
@@ -51,15 +96,21 @@ onclick="selectCafe('${cafe.id}')"
             container.innerHTML += card;
         });
 
-        // 🔥 WAJIB untuk icon dinamis
         lucide.createIcons();
 
     } catch (error) {
-        console.error("Error:", error);
+        console.error("ERROR:", error);
+        alert("Gagal load data cafe");
     }
 }
 
+
+// ============================
+// PILIH CAFE
+// ============================
 function selectCafe(id) {
     localStorage.setItem("selectedCafe", id);
+
+    // redirect ke dashboard bapenda
     window.location.href = "/view/bapenda/dashboard.html";
 }

@@ -9,22 +9,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
             const res = await fetch("http://127.0.0.1:5000/api/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    username,
-                    password
-                })
-            });
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        username,
+        password
+    })
+});
 
-            const data = await res.json();
+console.log("STATUS:", res.status);
 
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
+const text = await res.text();
+console.log("RAW RESPONSE:", text);
+
+let data;
+try {
+    data = JSON.parse(text);
+} catch (e) {
+    alert("Response bukan JSON!");
+    return;
+}
 
             localStorage.setItem("token", data.access_token);
             localStorage.setItem("cafe_id", data.user.id);
@@ -35,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data.user.role === "cafe") {
                 window.location.href = "/view/cafe/dashboard.html";
             } else if (data.user.role === "bapenda") {
-                window.location.href = "view/bapenda/select-cafe.html";
+                window.location.href = "/view/bapenda/select-cafe.html";
             }
 
         } catch (err) {

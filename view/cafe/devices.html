@@ -1,171 +1,238 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Devices - Kopi Kita</title> <!-- Ganti nama cafe jika cafe berbeda -->
-    <link rel="stylesheet" href="../src/style.css">
-    <script type="module" src="../src/main.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Devices</title>->
+    <link rel="stylesheet" href="../src/style.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
-</head>
+  </head>
 
-<body class="bg-cafe-secondary min-h-screen flex font-sans">
+  <body class="bg-cafe-secondary min-h-screen flex font-sans">
     <!-- Navbar -->
     <nav
-        class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center z-50 shadow-sm">
-        <div class="flex items-center gap-3">
-            <button id="sidebarToggle" class="p-2 hover:bg-gray-100 rounded-lg transition-all cursor-pointer">
-                <i data-lucide="menu" id="toggleIcon" class="w-6 h-6 text-cafe-dark"></i>
-            </button>
-            <div class="hidden sm:block leading-tight">
-                <!-- Ganti dengan nama cafe terkait-->
-                <h2 class="font-bold text-sm text-cafe-dark">Kopi Kita</h2>
-                <!-- Ganti dengan alamat cafe terkait-->
-                <p class="text-[10px] text-cafe-muted">Jl. Sutomo</p>
-            </div>
+      class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center z-50 shadow-sm"
+    >
+      <div class="flex items-center gap-3">
+        <button
+          id="sidebarToggle"
+          class="p-2 hover:bg-gray-100 rounded-lg transition-all cursor-pointer"
+        >
+          <i
+            data-lucide="menu"
+            id="toggleIcon"
+            class="w-6 h-6 text-cafe-dark"
+          ></i>
+        </button>
+        <div class="hidden sm:block leading-tight">
+          <!-- Ganti dengan nama cafe terkait-->
+          <h2 class="font-bold text-sm text-cafe-dark">Kopi Kita</h2>
+          <!-- Ganti dengan alamat cafe terkait-->
+          <p class="text-[10px] text-cafe-muted">Jl. Sutomo</p>
         </div>
+      </div>
     </nav>
 
     <!-- Sidebar -->
-    <aside id="sidebar"
-        class="fixed top-16 left-0 w-full md:w-72 bg-white border-r border-gray-100 flex flex-col z-40 shadow-sm 
-             transition-all duration-300 h-0 md:h-[calc(100vh-64px)] opacity-0 md:opacity-100 overflow-y-auto md:overflow-visible">
-        <div class="p-6 flex items-center gap-3 border-b border-gray-50">
-            <div class="bg-cafe-primary p-2 rounded-lg text-white">
-                <i data-lucide="coffee" class="w-5 h-5"></i>
-            </div>
-            <span class="font-bold text-lg text-cafe-dark">Cafe Monitoring System</span>
+    <aside
+      id="sidebar"
+      class="fixed top-16 left-0 w-full md:w-72 bg-white border-r border-gray-100 flex flex-col z-40 shadow-sm transition-all duration-300 h-0 md:h-[calc(100vh-64px)] opacity-0 md:opacity-100 overflow-y-auto md:overflow-visible"
+    >
+      <div class="p-6 flex items-center gap-3 border-b border-gray-50">
+        <div class="bg-cafe-primary p-2 rounded-lg text-white">
+          <i data-lucide="coffee" class="w-5 h-5"></i>
         </div>
+        <span class="font-bold text-lg text-cafe-dark"
+          >Cafe Monitoring System</span
+        >
+      </div>
 
-        <nav class="flex-1 p-4 space-y-2">
-            <button onclick="window.location.href='edit-cafe-information.html'"
-                class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer">
-                <span>Edit Informasi Cafe</span>
-            </button>
-            <div class="h-px bg-gray-100 my-4"></div>
-            <button onclick="window.location.href='dashboard.html'"
-                class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted hover:bg-gray-50 rounded-xl transition-all">
-                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                Dashboard
-            </button>
-            <button onclick="window.location.href='services.html'"
-                class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted hover:bg-gray-50 rounded-xl transition-all cursor-pointer">
-                <i data-lucide="clock" class="w-5 h-5"></i>
-                Pelayanan
-            </button>
-            <button 
-                class="w-full flex items-center gap-3 px-4 py-3 bg-cafe-secondary/50 text-cafe-primary font-bold rounded-xl transition-all">
-                <i data-lucide="camera" class="w-5 h-5"></i>
-                Perangkat
-            </button>
-        </nav>
+      <nav class="flex-1 p-4 space-y-2">
+        <button
+          onclick="window.location.href = 'edit-cafe-information.html'"
+          class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
+        >
+          <span>Edit Informasi Cafe</span>
+        </button>
+        <div class="h-px bg-gray-100 my-4"></div>
+        <button
+          onclick="window.location.href = 'dashboard.html'"
+          class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted hover:bg-gray-50 rounded-xl transition-all"
+        >
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+          Dashboard
+        </button>
+        <button
+          onclick="window.location.href = 'services.html'"
+          class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted hover:bg-gray-50 rounded-xl transition-all cursor-pointer"
+        >
+          <i data-lucide="clock" class="w-5 h-5"></i>
+          Pelayanan
+        </button>
+        <button
+          class="w-full flex items-center gap-3 px-4 py-3 bg-cafe-secondary/50 text-cafe-primary font-bold rounded-xl transition-all"
+        >
+          <i data-lucide="camera" class="w-5 h-5"></i>
+          Perangkat
+        </button>
+      </nav>
 
-        <!-- Logout Button -->
-        <div class="p-4 border-t border-gray-50">
-            <button id="logoutBtn"
-                class="w-full flex items-center gap-3 px-4 py-3 text-cafe-dark hover:text-cafe-red font-bold transition-all cursor-pointer">
-                <i data-lucide="log-out" class="w-5 h-5"></i>
-                Logout
-            </button>
-        </div>
+      <!-- Logout Button -->
+      <div class="p-4 border-t border-gray-50">
+        <button
+          id="logoutBtn"
+          class="w-full flex items-center gap-3 px-4 py-3 text-cafe-dark hover:text-cafe-red font-bold transition-all cursor-pointer"
+        >
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+          Logout
+        </button>
+      </div>
     </aside>
 
+    <main
+      id="mainContent"
+      class="flex-1 pt-24 p-6 transition-all duration-300 md:ml-72 ml-0"
+    >
+      <section>
+        <h1 class="text-3xl font-bold text-cafe-dark mb-2 tracking-tight">
+          Daftar Perangkat
+        </h1>
+        <p class="text-cafe-muted text-sm mb-8">
+          Kamera deteksi monitoring dan statusnya
+        </p>
 
-    <main id="mainContent" class="flex-1 pt-24 p-6 transition-all duration-300 md:ml-72 ml-0">
-        <section>
-            <h1 class="text-3xl font-bold text-cafe-dark mb-2 tracking-tight">Daftar Perangkat</h1>
-            <p class="text-cafe-muted text-sm mb-8">Kamera deteksi monitoring dan statusnya</p>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-8 rounded-cafe shadow-cafe-card border border-white flex items-center justify-between">
-                    <div class="bg-blue-50 p-4 rounded-2xl text-blue-500">
-                        <i data-lucide="camera" class="w-8 h-8"></i>
-                    </div>
-                    <div class="text-right">
-                        <span id="totalCamera" class="text-4xl font-black text-cafe-dark">0</span>
-                        <!-- Jumlah kamera yang terpasang di cafe, pastikan jumlah kamera sesuai dengan data yang tersimpan di database -->
-                        <p class="text-xs text-cafe-muted font-medium mt-1 uppercase tracking-wider">Total Kamera</p>
-                    </div>
-                </div>
-                <div class="bg-white p-8 rounded-cafe shadow-cafe-card border border-white flex items-center justify-between">
-                    <div class="bg-green-50 p-4 rounded-2xl text-green-500">
-                        <i data-lucide="check-circle" class="w-8 h-8"></i>
-                    </div>
-                    <div class="text-right">
-                        <span id="activeCamera" class="text-4xl font-black text-cafe-dark">0</span>
-                        <!-- Jumlah kamera yang aktif di cafe, status aktif kamera akan ditentukan di algoritma deteksi -->
-                        <p class="text-xs text-cafe-muted font-medium mt-1 uppercase tracking-wider">Kamera Aktif</p>
-                    </div>
-                </div>
-                <div class="bg-white p-8 rounded-cafe shadow-cafe-card border border-white flex items-center justify-between">
-                    <div class="bg-red-50 p-4 rounded-2xl text-red-500">
-                        <i data-lucide="x-circle" class="w-8 h-8"></i>
-                    </div>
-                    <div class="text-right">
-                        <span id="inactiveCamera" class="text-4xl font-black text-cafe-dark">0</span>
-                        <!-- Jumlah kamera yang nonaktif di cafe, status nonaktif kamera akan ditentukan di algoritma deteksi -->
-                        <p class="text-xs text-cafe-muted font-medium mt-1 uppercase tracking-wider">Kamera Nonaktif</p>
-                    </div>
-                </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div
+            class="bg-white p-8 rounded-cafe shadow-cafe-card border border-white flex items-center justify-between"
+          >
+            <div class="bg-blue-50 p-4 rounded-2xl text-blue-500">
+              <i data-lucide="camera" class="w-8 h-8"></i>
             </div>
-
-            <div class="bg-white pb-8 rounded-cafe shadow-cafe-card border border-white overflow-hidden">
-                <div class="p-8 border-b border-gray-50">
-                    <h3 class="font-bold text-cafe-dark text-lg">Daftar Kamera</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-50 text-cafe-muted text-sm font-semibold uppercase tracking-wider">
-                            <tr>
-                                <th class="px-8 py-4">No. Kamera</th>
-                                <th class="px-8 py-4 text-center">Status</th>
-                                <th class="px-8 py-4 text-right">Terakhir Diperbarui</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100" id="deviceTable">
-                            <!-- data dari JS -->
-                        </tbody>
-                    </table>
-                </div>
+            <div class="text-right">
+              <span id="totalCamera" class="text-4xl font-black text-cafe-dark"
+                >0</span
+              >
+              <!-- Jumlah kamera yang terpasang di cafe, pastikan jumlah kamera sesuai dengan data yang tersimpan di database -->
+              <p
+                class="text-xs text-cafe-muted font-medium mt-1 uppercase tracking-wider"
+              >
+                Total Kamera
+              </p>
             </div>
-        </section>
+          </div>
+          <div
+            class="bg-white p-8 rounded-cafe shadow-cafe-card border border-white flex items-center justify-between"
+          >
+            <div class="bg-green-50 p-4 rounded-2xl text-green-500">
+              <i data-lucide="check-circle" class="w-8 h-8"></i>
+            </div>
+            <div class="text-right">
+              <span id="activeCamera" class="text-4xl font-black text-cafe-dark"
+                >0</span
+              >
+              <!-- Jumlah kamera yang aktif di cafe, status aktif kamera akan ditentukan di algoritma deteksi -->
+              <p
+                class="text-xs text-cafe-muted font-medium mt-1 uppercase tracking-wider"
+              >
+                Kamera Aktif
+              </p>
+            </div>
+          </div>
+          <div
+            class="bg-white p-8 rounded-cafe shadow-cafe-card border border-white flex items-center justify-between"
+          >
+            <div class="bg-red-50 p-4 rounded-2xl text-red-500">
+              <i data-lucide="x-circle" class="w-8 h-8"></i>
+            </div>
+            <div class="text-right">
+              <span
+                id="inactiveCamera"
+                class="text-4xl font-black text-cafe-dark"
+                >0</span
+              >
+              <!-- Jumlah kamera yang nonaktif di cafe, status nonaktif kamera akan ditentukan di algoritma deteksi -->
+              <p
+                class="text-xs text-cafe-muted font-medium mt-1 uppercase tracking-wider"
+              >
+                Kamera Nonaktif
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white pb-8 rounded-cafe shadow-cafe-card border border-white overflow-hidden"
+        >
+          <div class="p-8 border-b border-gray-50">
+            <h3 class="font-bold text-cafe-dark text-lg">Daftar Kamera</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead
+                class="bg-gray-50 text-cafe-muted text-sm font-semibold uppercase tracking-wider"
+              >
+                <tr>
+                  <th class="px-8 py-4">No. Kamera</th>
+                  <th class="px-8 py-4 text-center">Status</th>
+                  <th class="px-8 py-4 text-right">Terakhir Diperbarui</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100" id="deviceTable">
+                <!-- data dari JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Modal Logout -->
-    <div id="logoutModal" class="fixed inset-0 z-50 items-center justify-center hidden p-4">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+    <div
+      id="logoutModal"
+      class="fixed inset-0 z-50 items-center justify-center hidden p-4"
+    >
+      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
-        <div
-            class="relative bg-white rounded-cafe shadow-2xl w-full max-w-md p-8 overflow-hidden border border-white transform transition-all">
-            <div class="flex flex-col items-center text-center">
-                <div class="bg-cafe-red-nonaktive p-4 rounded-full mb-6 text-cafe-red">
-                    <i data-lucide="alert-triangle" class="w-10 h-10"></i>
-                </div>
+      <div
+        class="relative bg-white rounded-cafe shadow-2xl w-full max-w-md p-8 overflow-hidden border border-white transform transition-all"
+      >
+        <div class="flex flex-col items-center text-center">
+          <div
+            class="bg-cafe-red-nonaktive p-4 rounded-full mb-6 text-cafe-red"
+          >
+            <i data-lucide="alert-triangle" class="w-10 h-10"></i>
+          </div>
 
-                <h3 class="text-2xl font-bold text-cafe-dark mb-2">Konfirmasi Logout</h3>
-                <p class="text-cafe-muted mb-8 leading-relaxed">
-                    Apakah Anda yakin ingin keluar dari sistem? Anda harus login kembali untuk mengakses dashboard.
-                </p>
+          <h3 class="text-2xl font-bold text-cafe-dark mb-2">
+            Konfirmasi Logout
+          </h3>
+          <p class="text-cafe-muted mb-8 leading-relaxed">
+            Apakah Anda yakin ingin keluar dari sistem? Anda harus login kembali
+            untuk mengakses dashboard.
+          </p>
 
-                <div class="flex gap-4 w-full">
-                    <button id="cancelLogout"
-                        class="flex-1 bg-gray-100 hover:bg-gray-200 text-cafe-dark font-bold py-3.5 rounded-xl transition-all cursor-pointer">
-                        Batal
-                    </button>
-                    <button onclick="window.location.href='/index.html'"
-                        class="flex-1 bg-cafe-red hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-200 transition-all cursor-pointer">
-                        Ya, Keluar
-                    </button>
-                </div>
-            </div>
+          <div class="flex gap-4 w-full">
+            <button
+              id="cancelLogout"
+              class="flex-1 bg-gray-100 hover:bg-gray-200 text-cafe-dark font-bold py-3.5 rounded-xl transition-all cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              onclick="window.location.href = '/index.html'"
+              class="flex-1 bg-cafe-red hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-200 transition-all cursor-pointer"
+            >
+              Ya, Keluar
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <script>
-        lucide.createIcons();
+      lucide.createIcons();
     </script>
 
     <script src="/view/cafe/js/devices.js"></script>
-</body>
+  </body>
 </html>
