@@ -20,9 +20,8 @@
             </button>
             <div class="hidden sm:block leading-tight">
                 <!-- Ganti dengan nama cafe terkait-->
-                <h2 class="font-bold text-sm text-cafe-dark">Kopi Kita</h2>
-                <!-- Ganti dengan alamat cafe terkait-->
-                <p class="text-[10px] text-cafe-muted">Jl. Sutomo</p>
+                <h2 id="cafeName" class="font-semibold text-sm text-cafe-dark">-</h2>
+             <p id="cafeAddress" class="text-[10px] text-cafe-muted">-</p>
             </div>
         </div>
     </nav>
@@ -89,59 +88,7 @@
                                 <th class="px-8 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <!-- Daftar kamera yang terpasang di cafe, ambil dari database -->
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-8 py-5 text-cafe-dark font-medium">Kopi Kita</td>
-                                <td class="px-8 py-5 text-center">
-                                    <span class="px-6 py-1.5 rounded-full bg-status-active-bg text-status-active-text text-sm font-bold">Jl. Sutomo</span>
-                                </td>
-                                <td class="px-4 md:px-8 py-5 text-center">
-                                    <div class="flex gap-2 md:gap-4 justify-center items-center">
-                                        <button id="deleteAccountButton" 
-                                                class="w-full max-w-20 md:max-w-25 bg-cafe-red hover:bg-red-600 text-white font-bold py-2 md:py-3 rounded-xl shadow-lg transition-all cursor-pointer text-sm md:text-base">
-                                            Hapus
-                                        </button>
-                                        <button onclick="window.location.href='edit-cafe.html'" class="w-full max-w-20 md:max-w-25 bg-cafe-green hover:bg-green-600 text-white font-bold py-2 md:py-3 rounded-xl shadow-lg transition-all cursor-pointer text-sm md:text-base">
-                                            Edit
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-8 py-5 text-cafe-dark font-medium">Parewa Cafe</td>
-                                <td class="px-8 py-5 text-center">
-                                    <span class="px-6 py-1.5 rounded-full bg-status-active-bg text-status-active-text text-sm font-bold">Jl. Bandar Purus</span>
-                                </td>
-                                <td class="px-4 md:px-8 py-5 text-center">
-                                    <div class="flex gap-2 md:gap-4 justify-center items-center">
-                                        <button id="deleteAccountButton" 
-                                                class="w-full max-w-20 md:max-w-25 bg-cafe-red hover:bg-red-600 text-white font-bold py-2 md:py-3 rounded-xl shadow-lg transition-all cursor-pointer text-sm md:text-base">
-                                            Hapus
-                                        </button>
-                                        <button onclick="window.location.href='edit-cafe.html'" class="w-full max-w-20 md:max-w-25 bg-cafe-green hover:bg-green-600 text-white font-bold py-2 md:py-3 rounded-xl shadow-lg transition-all cursor-pointer text-sm md:text-base">
-                                            Edit
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-8 py-5 text-cafe-dark font-medium">Kopi Oz</td>
-                                <td class="px-8 py-5 text-center">
-                                    <span class="px-6 py-1.5 rounded-full bg-status-inactive-bg text-status-inactive-text text-sm font-bold">Jl. Drs Moh Hatta</span>
-                                </td>
-                                <td class="px-4 md:px-8 py-5 text-center">
-                                    <div class="flex gap-2 md:gap-4 justify-center items-center">
-                                        <button id="deleteAccountButton" 
-                                                class="w-full max-w-20 md:max-w-25 bg-cafe-red hover:bg-red-600 text-white font-bold py-2 md:py-3 rounded-xl shadow-lg transition-all cursor-pointer text-sm md:text-base">
-                                            Hapus
-                                        </button>
-                                        <button onclick="window.location.href='edit-cafe.html'" class="w-full max-w-20 md:max-w-25 bg-cafe-green hover:bg-green-600 text-white font-bold py-2 md:py-3 rounded-xl shadow-lg transition-all cursor-pointer text-sm md:text-base">
-                                            Edit
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tbody id="cafeTableBody" class="divide-y divide-gray-100">
                         </tbody>
                     </table>
                 </div>
@@ -214,6 +161,6 @@
     <script>
         lucide.createIcons();
     </script>
-
+    <script src="/view/bapenda/js/settings.js"></script>
 </body>
 </html>

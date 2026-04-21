@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - <h1 id="cafeName"></h1></title> <!-- Ganti nama cafe jika cafe berbeda -->
+    <title id="pageTitle">Dashboard</title>
     <link rel="stylesheet" href="../src/style.css">
     <script type="module" src="../src/main.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -20,10 +20,8 @@
                 <i data-lucide="menu" id="toggleIcon" class="w-6 h-6 text-cafe-dark"></i>
             </button>
             <div class="hidden sm:block leading-tight min-w-0">
-                <!-- Ganti dengan nama cafe yang sesuai -->
-                <h2 class="font-bold text-sm text-cafe-dark truncate">Kopi Kita</h2>
-                <!-- Ganti dengan alamat cafe yang sesuai -->
-                <p class="text-[10px] text-cafe-muted truncate">Jl. Sutomo</p>
+                <h2 id="cafeName" class="font-bold text-sm text-cafe-dark truncate">-</h2>
+                <p id="cafeAddress" class="text-[10px] text-cafe-muted truncate">-</p>
             </div>
         </div>
     </nav>
