@@ -59,32 +59,35 @@ def home():
 # =====================================================
 @app.route("/api/login", methods=["POST"])
 def login():
-    data = request.json
+    data = request.get_json()
 
-    docs = db.collection("cafes")\
-        .where("username", "==", data["username"])\
-        .get()
+    if not data or "username" not in data or "password" not in data:
+        return jsonify({"error": "Data tidak lengkap"}), 400
 
-    if not docs:
-        return jsonify({"error": "Login gagal"}), 401
+    username = data["username"]
+    password = data["password"]
 
-    cafe_doc = docs[0]
-    cafe = cafe_doc.to_dict()
+    doc = db.collection("cafes").document(username).get()
 
-    if not check_password_hash(cafe["password"], data["password"]):
-        return jsonify({"error": "Login gagal"}), 401
+    if not doc.exists:
+        return jsonify({"error": "User tidak ditemukan"}), 404
+
+    cafe = doc.to_dict()
+
+    if not check_password_hash(cafe.get("password"), password):
+        return jsonify({"error": "Password salah"}), 401
 
     access_token = create_access_token(
-        identity=cafe_doc.id,
-        additional_claims={"role": cafe["role"]}
+        identity=username,   # 🔥 ini berubah
+        additional_claims={"role": cafe.get("role")}
     )
 
     return jsonify({
         "access_token": access_token,
         "user": {
-            "id": cafe_doc.id,
-            "name": cafe["name"],
-            "role": cafe["role"]
+            "id": username,
+            "name": cafe.get("name"),
+            "role": cafe.get("role")
         }
     })
 
@@ -160,6 +163,57 @@ def dashboard_cafe():
     })
 
 # =====================================================
+# SELECT CAFE BAPENDA
+# =====================================================
+@app.route("/api/bapenda/cafes", methods=["GET"])
+@jwt_required()
+def get_cafes_bapenda():
+    identity = get_jwt_identity()
+
+    # 🔥 FIX: identity cuma string (id)
+    user_doc = db.collection("cafes").document(identity).get()
+
+    if not user_doc.exists:
+        return jsonify({"error": "User tidak ditemukan"}), 404
+
+    user = user_doc.to_dict()
+
+    if user["role"] != "bapenda":
+        return jsonify({"error": "Akses ditolak"}), 403
+
+    docs = db.collection("cafes")\
+        .where("role", "==", "cafe")\
+        .stream()
+
+    result = []
+
+    for doc in docs:
+        cafe = doc.to_dict()
+
+        result.append({
+            "id": doc.id,
+            "name": cafe.get("name"),
+            "address": cafe.get("address")
+        })
+
+    return jsonify(result)
+
+@app.route("/api/cafes", methods=["GET"])
+@jwt_required()
+def get_cafes():
+    docs = db.collection("cafes").stream()
+
+    result = []
+    for doc in docs:
+        cafe = doc.to_dict()
+        cafe["id"] = doc.id
+        cafe.pop("password", None)
+        result.append(cafe)
+
+    return jsonify(result)
+
+    
+# =====================================================
 # DASHBOARD BAPENDA
 # =====================================================
 @app.route("/api/bapenda/dashboard/<string:cafe_id>")
@@ -213,11 +267,17 @@ def dashboard_bapenda(cafe_id):
 def register_bapenda():
     data = request.json
 
-    doc_ref = db.collection("cafes").document()
+    username = data["username"]
+
+    doc_ref = db.collection("cafes").document(username)
+
+    # 🔥 cek kalau sudah ada
+    if doc_ref.get().exists:
+        return jsonify({"error": "Username sudah digunakan"}), 400
 
     doc_ref.set({
         "name": "Admin Bapenda",
-        "username": data["username"],
+        "username": username,
         "password": generate_password_hash(data["password"]),
         "role": "bapenda"
     })
@@ -268,14 +328,13 @@ def add_cafe():
     if not all(field in data for field in required_fields):
         return jsonify({"error": "Semua field wajib diisi"}), 400
 
-    existing = db.collection("cafes")\
-        .where("username", "==", data["username"])\
-        .get()
+    username = data["username"]
 
-    if existing:
+    doc_ref = db.collection("cafes").document(username)
+
+    # 🔥 cek langsung by ID (TANPA QUERY)
+    if doc_ref.get().exists:
         return jsonify({"error": "Username sudah digunakan"}), 400
-
-    doc_ref = db.collection("cafes").document()
 
     doc_ref.set({
         "name": data["name"],
@@ -284,7 +343,7 @@ def add_cafe():
         "close_time": data["close_time"],
         "table_count": int(data["table_count"]),
         "camera_count": int(data["camera_count"]),
-        "username": data["username"],
+        "username": username,
         "password": generate_password_hash(data["password"]),
         "role": "cafe",
         "created_at": datetime.utcnow()
@@ -292,7 +351,7 @@ def add_cafe():
 
     return jsonify({
         "message": "Cafe berhasil ditambahkan",
-        "id": doc_ref.id
+        "id": username   # 🔥 sekarang ID = username
     }), 201
 
 
@@ -544,6 +603,38 @@ def update_device(device_code):
     })
 
     return jsonify({"message": "Status diupdate"})
+
+    # =========================
+# MIGRASI CAFE_ID
+# =========================
+
+mapping = {
+    "TCaHYNmAs1buL6ipLhz0": "jahfal",
+    "0R392qd4yLodjZP8AJub": "admin",
+    "C5nGh45VFoWlheQYOprK": "diaz",
+    "i3nrW8dhkiZPS81NFjHh": "cafe1",
+    # tambahkan semua mapping kamu
+}
+
+collections = ["pelanggan", "services", "devices"]
+
+for col in collections:
+    print(f"\n=== MIGRASI {col} ===")
+
+    docs = db.collection(col).stream()
+
+    for doc in docs:
+        data = doc.to_dict()
+        old_id = data.get("cafe_id")
+
+        if old_id in mapping:
+            new_id = mapping[old_id]
+
+            db.collection(col).document(doc.id).update({
+                "cafe_id": new_id
+            })
+
+            print(f"Updated {doc.id}: {old_id} → {new_id}")
 
 # =====================================================
 # RUN APP
