@@ -17,8 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // tampilkan nama & alamat cafe
-    if (cafeName) document.querySelector("h2").innerText = cafeName;
-    if (cafeAddress) document.querySelector("p").innerText = cafeAddress;
+        if (cafeName) document.querySelector("h2").innerText = cafeName;
+        if (cafeAddress) document.querySelector("p").innerText = cafeAddress;
 
     const dateInput = document.querySelector("input[type='date']");
     const today = new Date().toISOString().split("T")[0];
@@ -124,15 +124,6 @@ function loadServices(tanggal) {
         console.error("ERROR SERVICES:", err);
     });
 }
-
-// ============================
-// LOGOUT
-// ============================
-document.getElementById("logoutBtn")?.addEventListener("click", () => {
-    localStorage.clear();
-    window.location.href = "/index.html";
-});
-
 
 // ============================
 // CLEAR INTERVAL

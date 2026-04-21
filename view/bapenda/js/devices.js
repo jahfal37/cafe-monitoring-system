@@ -15,11 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCafeInfo();
     loadDevices();
 
-    // logout
-    document.getElementById("logoutBtn")?.addEventListener("click", () => {
-        localStorage.clear();
-        window.location.href = "/index.html";
-    });
+    
 });
 
 
@@ -139,12 +135,12 @@ async function loadCafeInfo() {
         console.log("CAFE:", data);
 
         const nameEl = document.getElementById("cafeName");
-const addressEl = document.getElementById("cafeAddress");
+        const addressEl = document.getElementById("cafeAddress");
 
-if (nameEl) nameEl.innerText = data.name || "-";
-if (addressEl) addressEl.innerText = data.address || "-";
+        if (nameEl) nameEl.innerText = data.name || "-";
+        if (addressEl) addressEl.innerText = data.address || "-";
 
-        document.title = "Devices - " + data.name;
+        document.title = "Devices - " + (data.name || "Cafe");
 
     } catch (err) {
         console.error("ERROR CAFE:", err);

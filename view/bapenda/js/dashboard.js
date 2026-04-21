@@ -19,33 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCafeInfo();
     loadDashboard();
 
-    // logout
-    const logoutBtn = document.getElementById("logoutBtn");
-const logoutModal = document.getElementById("logoutModal");
-const cancelLogout = document.getElementById("cancelLogout");
-const confirmLogout = document.getElementById("confirmLogout");
-
-if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-        logoutModal.classList.remove("hidden");
-        logoutModal.classList.add("flex");
-    });
-}
-
-if (cancelLogout) {
-    cancelLogout.addEventListener("click", () => {
-        logoutModal.classList.add("hidden");
-        logoutModal.classList.remove("flex");
-    });
-}
-
-if (confirmLogout) {
-    confirmLogout.addEventListener("click", () => {
-        localStorage.clear();
-        window.location.href = "/index.html";
-    });
-}
-
+});
 
 // ============================
 // DROPDOWN CAFE
@@ -261,8 +235,11 @@ async function loadCafeInfo() {
 
         console.log("INFO CAFE:", data);
 
-        document.getElementById("cafeName").innerText = data.name || "-";
-        document.getElementById("cafeAddress").innerText = data.address || "-";
+        const nameEl = document.getElementById("cafeName");
+        const addressEl = document.getElementById("cafeAddress");
+
+        if (nameEl) nameEl.innerText = data.name || "-";
+        if (addressEl) addressEl.innerText = data.address || "-";
 
         document.title = "Dashboard - " + data.name;
 

@@ -1,128 +1,223 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Services</title>
-    <link rel="stylesheet" href="../src/style.css">
+    <link rel="stylesheet" href="../src/style.css" />
     <script type="module" src="../src/main.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-</head>
+  </head>
 
-<body class="bg-cafe-secondary min-h-screen flex font-sans">
-
+  <body class="bg-cafe-secondary min-h-screen flex font-sans">
     <!-- Navbar -->
     <nav
-        class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center z-50 shadow-sm">
-        <div class="flex items-center gap-3 min-w-0">
-            <button id="sidebarToggle" class="p-2 hover:bg-gray-100 rounded-lg transition-all cursor-pointer">
-                <i data-lucide="menu" id="toggleIcon" class="w-6 h-6 text-cafe-dark"></i>
-            </button>
-            <div class="flex-1 truncate gap-3 leading-tight min-w-0">
-                <h2 class="font-bold text-sm text-cafe-dark truncate">Kopi Kita</h2>
-                <p class="text-[10px] text-cafe-muted truncate">Jl. Sutomo</p>
-            </div>
+      class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center z-50 shadow-sm"
+    >
+      <div class="flex items-center gap-3 min-w-0">
+        <button
+          id="sidebarToggle"
+          class="p-2 hover:bg-gray-100 rounded-lg transition-all cursor-pointer"
+        >
+          <i
+            data-lucide="menu"
+            id="toggleIcon"
+            class="w-6 h-6 text-cafe-dark"
+          ></i>
+        </button>
+        <div class="flex-1 truncate gap-3 leading-tight min-w-0">
+          <h2 class="font-bold text-sm text-cafe-dark truncate">Kopi Kita</h2>
+          <p class="text-[10px] text-cafe-muted truncate">Jl. Sutomo</p>
         </div>
+      </div>
     </nav>
 
     <!-- Sidebar -->
-    <aside id="sidebar"
-        class="fixed top-16 left-0 w-full md:w-72 bg-white border-r border-gray-100 flex flex-col z-40 shadow-sm 
-             transition-all duration-300 h-0 md:h-[calc(100vh-64px)] opacity-0 md:opacity-100 overflow-y-auto md:overflow-visible">
-        <div class="p-6 flex items-center gap-3 border-b border-gray-50">
-            <div class="bg-cafe-primary p-2 rounded-lg text-white">
-                <i data-lucide="coffee" class="w-5 h-5"></i>
-            </div>
-            <span class="font-bold text-lg text-cafe-dark">Cafe Monitoring System</span>
+    <aside
+      id="sidebar"
+      class="fixed top-16 left-0 w-full md:w-72 bg-white border-r border-gray-100 flex flex-col z-40 shadow-sm md:h-[calc(100vh-64px)] overflow-y-auto"
+    >
+      <div class="p-6 flex items-center gap-3 border-b border-gray-50">
+        <div class="bg-cafe-primary p-2 rounded-lg text-white">
+          <i data-lucide="coffee" class="w-5 h-5"></i>
         </div>
+        <span class="font-bold text-lg text-cafe-dark"
+          >Cafe Monitoring System</span
+        >
+      </div>
 
-        <nav class="flex-1 p-4 space-y-2">
-            <button onclick="window.location.href='edit-cafe-information.html'"
-                class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer">
-                <span>Edit Informasi Cafe</span>
-            </button>
-            <div class="h-px bg-gray-100 my-4"></div>
-            <button onclick="window.location.href='dashboard.html'"
-                class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted hover:bg-gray-50 rounded-xl transition-all">
-                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                Dashboard
-            </button>
-            <button
-                class="w-full flex items-center gap-3 px-4 py-3 bg-cafe-secondary/50 text-cafe-primary font-bold  rounded-xl transition-all cursor-pointer">
-                <i data-lucide="clock" class="w-5 h-5"></i>
-                Pelayanan
-            </button>
-            <button onclick="window.location.href='devices.html'"
-                class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted hover:bg-gray-50 rounded-xl transition-all">
-                <i data-lucide="camera" class="w-5 h-5"></i>
-                Perangkat
-            </button>
-        </nav>
-
-        <!-- Logout Button -->
-        <div class="p-4 border-t border-gray-50">
-            <button id="logoutBtn"
-                class="w-full flex items-center gap-3 px-4 py-3 text-cafe-dark hover:text-cafe-red font-bold transition-all cursor-pointer">
-                <i data-lucide="log-out" class="w-5 h-5"></i>
-                Logout
-            </button>
-        </div>
+      <nav class="flex-1 p-4 space-y-2">
+        <button
+          onclick="window.location.href = 'edit-cafe-information.html'"
+          class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
+        >
+          <span>Edit Informasi Cafe</span>
+        </button>
+        <div class="h-px bg-gray-100 my-4"></div>
+        <button
+          onclick="window.location.href = 'dashboard.html'"
+          class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted hover:bg-gray-50 rounded-xl transition-all"
+        >
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+          Dashboard
+        </button>
+        <button
+          class="w-full flex items-center gap-3 px-4 py-3 bg-cafe-secondary/50 text-cafe-primary font-bold rounded-xl transition-all cursor-pointer"
+        >
+          <i data-lucide="clock" class="w-5 h-5"></i>
+          Pelayanan
+        </button>
+        <button
+          onclick="window.location.href = 'devices.html'"
+          class="w-full flex items-center gap-3 px-4 py-3 text-cafe-muted hover:bg-gray-50 rounded-xl transition-all"
+        >
+          <i data-lucide="camera" class="w-5 h-5"></i>
+          Perangkat
+        </button>
+      </nav>
+      <!-- Logout Button -->
+      <div class="p-4 border-t border-gray-50">
+        <button
+          id="logoutBtn"
+          class="w-full flex items-center gap-3 px-4 py-3 text-cafe-dark hover:text-cafe-red font-bold transition-all cursor-pointer"
+        >
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+          Logout
+        </button>
+      </div>
     </aside>
 
-    <main id="mainContent" class="flex-1 pt-24 p-6 md:w-[calc(100%-18rem)] transition-all duration-300 md:ml-72 ml-0">
-        <section>
-            <h1 class="text-3xl font-bold text-cafe-dark mb-2 tracking-tight">Monitoring Pelayanan</h1>
-            <p class="text-cafe-muted text-sm mb-8">Tinjau waktu tunggu pelanggan dan efisiensi pelayanan</p>
+    <main
+      id="mainContent"
+      class="flex-1 pt-24 p-6 md:w-[calc(100%-18rem)] transition-all duration-300 md:ml-72 ml-0"
+    >
+      <section>
+        <h1 class="text-3xl font-bold text-cafe-dark mb-2 tracking-tight">
+          Monitoring Pelayanan
+        </h1>
+        <p class="text-cafe-muted text-sm mb-8">
+          Tinjau waktu tunggu pelanggan dan efisiensi pelayanan
+        </p>
 
-            <div class="flex items-center gap-4 mb-8">
-                <span class="font-bold text-cafe-dark">Pilih tanggal:</span>
-                <input type="date" class="px-4 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20">
-            </div>
+        <div class="flex items-center gap-4 mb-8">
+          <span class="font-bold text-cafe-dark">Pilih tanggal:</span>
+          <input
+            type="date"
+            class="px-4 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20"
+          />
+        </div>
 
-            <!-- CARD -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-10 rounded-cafe shadow-cafe-card border border-white text-center">
-                    <p class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider">Rata - rata Waktu Tunggu</p>
-                    <span class="text-4xl font-black text-cafe-dark">24 Menit</span>
-                </div>
-                <div class="bg-white p-10 rounded-cafe shadow-cafe-card border border-white text-center">
-                    <p class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider">Waktu Tunggu Terlama</p>
-                    <span class="text-4xl font-black text-cafe-dark">40 Menit</span>
-                </div>
-                <div class="bg-white p-10 rounded-cafe shadow-cafe-card border border-white text-center">
-                    <p class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider">Jumlah Kasus Long Wait</p>
-                    <span class="text-4xl font-black text-cafe-dark">5 Kasus</span>
-                </div>
-            </div>
+        <!-- CARD -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div
+            class="bg-white p-10 rounded-cafe shadow-cafe-card border border-white text-center"
+          >
+            <p
+              class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider"
+            >
+              Rata - rata Waktu Tunggu
+            </p>
+            <span class="text-4xl font-black text-cafe-dark">24 Menit</span>
+          </div>
+          <div
+            class="bg-white p-10 rounded-cafe shadow-cafe-card border border-white text-center"
+          >
+            <p
+              class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider"
+            >
+              Waktu Tunggu Terlama
+            </p>
+            <span class="text-4xl font-black text-cafe-dark">40 Menit</span>
+          </div>
+          <div
+            class="bg-white p-10 rounded-cafe shadow-cafe-card border border-white text-center"
+          >
+            <p
+              class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider"
+            >
+              Jumlah Kasus Long Wait
+            </p>
+            <span class="text-4xl font-black text-cafe-dark">5 Kasus</span>
+          </div>
+        </div>
 
-            <!-- TABLE -->
-            <div class="bg-white rounded-cafe shadow-cafe-card border border-white overflow-hidden p-8">
-                <h3 class="font-bold text-cafe-dark text-xl mb-8">Waktu Tunggu Pelanggan</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="text-cafe-dark text-sm font-bold border-b border-gray-100">
-                            <tr>
-                                <th class="px-6 py-4">No. Pelanggan</th>
-                                <th class="px-6 py-4">No. Meja</th>
-                                <th class="px-6 py-4">Waktu Tunggu</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                            </tr>
-                        </thead>
-
-                        <!-- ✅ HANYA INI YANG DIUBAH (hapus dummy) -->
-                        <tbody class="divide-y divide-gray-50 text-cafe-dark font-medium">
-                        </tbody>
-
-                    </table>
-                </div>
-            </div>
-        </section>
+        <!-- TABLE -->
+        <div
+          class="bg-white rounded-cafe shadow-cafe-card border border-white overflow-hidden p-8"
+        >
+          <h3 class="font-bold text-cafe-dark text-xl mb-8">
+            Waktu Tunggu Pelanggan
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead
+                class="text-cafe-dark text-sm font-bold border-b border-gray-100"
+              >
+                <tr>
+                  <th class="px-6 py-4">No. Pelanggan</th>
+                  <th class="px-6 py-4">No. Meja</th>
+                  <th class="px-6 py-4">Waktu Tunggu</th>
+                  <th class="px-6 py-4 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody
+                class="divide-y divide-gray-50 text-cafe-dark font-medium"
+              ></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
 
+    <!-- Modal Logout -->
+    <div
+      id="logoutModal"
+      class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+    >
+      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+
+      <div
+        class="relative bg-white rounded-cafe shadow-2xl w-full max-w-md p-8 border border-white"
+      >
+        <div class="flex flex-col items-center text-center">
+          <div
+            class="bg-cafe-red-nonaktive p-4 rounded-full mb-6 text-cafe-red"
+          >
+            <i data-lucide="alert-triangle" class="w-10 h-10"></i>
+          </div>
+
+          <h3 class="text-2xl font-bold text-cafe-dark mb-2">
+            Konfirmasi Logout
+          </h3>
+
+          <p class="text-cafe-muted mb-8 leading-relaxed">
+            Apakah Anda yakin ingin keluar dari sistem? Anda harus login kembali
+            untuk mengakses dashboard.
+          </p>
+
+          <div class="flex gap-4 w-full">
+            <!-- tombol batal -->
+            <button
+              id="cancelLogout"
+              class="flex-1 bg-gray-100 hover:bg-gray-200 text-cafe-dark font-bold py-3.5 rounded-xl"
+            >
+              Batal
+            </button>
+
+            <!-- tombol konfirmasi -->
+            <button
+              id="confirmLogout"
+              class="flex-1 bg-cafe-red hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg"
+            >
+              Ya, Keluar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</body>
+  </body>
 
-<script src="/view/cafe/js/services.js"></script>
-
+  <script src="/view/cafe/js/services.js"></script>
+  <script src="/view/src/logout.js"></script>
 </html>

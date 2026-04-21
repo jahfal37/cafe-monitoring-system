@@ -204,47 +204,54 @@
       </section>
     </main>
 
-    <!-- Modal Logout -->
-    <div
-      id="logoutModal"
-      class="fixed inset-0 z-50 items-center justify-center hidden p-4"
-    >
-      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+   <!-- Modal Logout -->
+<div id="logoutModal"
+     class="fixed inset-0 z-50 hidden items-center justify-center p-4">
 
-      <div
-        class="relative bg-white rounded-cafe shadow-2xl w-full max-w-md p-8 overflow-hidden border border-white transform transition-all"
-      >
-        <div class="flex flex-col items-center text-center">
-          <div
-            class="bg-cafe-red-nonaktive p-4 rounded-full mb-6 text-cafe-red"
-          >
-            <i data-lucide="alert-triangle" class="w-10 h-10"></i>
-          </div>
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
-          <h3 class="text-2xl font-bold text-cafe-dark mb-2">
-            Konfirmasi Logout
-          </h3>
-          <p class="text-cafe-muted mb-8 leading-relaxed">
-            Apakah Anda yakin ingin keluar dari sistem? Anda harus login kembali
-            untuk mengakses dashboard.
-          </p>
+  <div class="relative bg-white rounded-cafe shadow-2xl w-full max-w-md p-8 border border-white">
 
-          <div class="flex gap-4 w-full">
-            <button
-              id="cancelLogout"
-              class="flex-1 bg-gray-100 hover:bg-gray-200 text-cafe-dark font-bold py-3.5 rounded-xl transition-all cursor-pointer"
-            >
-              Batal
-            </button>
-            <button id="confirmLogout"
-    class="flex-1 bg-cafe-red hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all">
-    Ya, Keluar
-</button>
-          </div>
-        </div>
+    <div class="flex flex-col items-center text-center">
+
+      <div class="bg-cafe-red-nonaktive p-4 rounded-full mb-6 text-cafe-red">
+        <i data-lucide="alert-triangle" class="w-10 h-10"></i>
+      </div>
+
+      <h3 class="text-2xl font-bold text-cafe-dark mb-2">
+        Konfirmasi Logout
+      </h3>
+
+      <p class="text-cafe-muted mb-8 leading-relaxed">
+        Apakah Anda yakin ingin keluar dari sistem? Anda harus login kembali
+        untuk mengakses dashboard.
+      </p>
+
+      <div class="flex gap-4 w-full">
+
+        <!-- tombol batal -->
+        <button id="cancelLogout"
+          class="flex-1 bg-gray-100 hover:bg-gray-200 text-cafe-dark font-bold py-3.5 rounded-xl">
+          Batal
+        </button>
+
+        <!-- tombol konfirmasi -->
+        <button id="confirmLogout"
+          class="flex-1 bg-cafe-red hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg">
+          Ya, Keluar
+        </button>
+
       </div>
     </div>
+
+  </div>
+</div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/src/logout.js"></script>
+    <script>
+  lucide.createIcons();
+</script>
+    <script src="/view/src/logout.js"></script>
+    
   </body>
 </html>
