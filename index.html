@@ -1,84 +1,82 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - Cafe Monitoring System</title>
-    <link rel="stylesheet" href="view/src/style.css" />
-    <script src="https://unpkg.com/lucide@latest"></script>
-  </head>
-  <body
-    class="min-h-screen flex items-center justify-center bg-cafe-secondary p-4"
-  >
-    <div
-      class="bg-white p-8 md:p-12 rounded-cafe shadow-cafe-card w-full max-w-120 border border-white"
-    >
-      <div class="flex flex-col items-center mb-10 text-center">
-        <div class="bg-cafe-primary p-4 rounded-full mb-6 shadow-md text-white">
-          <i data-lucide="coffee" style="width: 32px; height: 32px"></i>
-        </div>
-        <h1 class="text-3xl font-bold text-cafe-dark tracking-tight">
-          Cafe Monitoring System
-        </h1>
-        <p class="text-cafe-muted mt-2 font-medium">
-          Sign in ke akun Bapenda atau akun cafe mu
-        </p>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Cafe Monitoring System</title>
+  <link rel="stylesheet" href="view/src/style.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="min-h-screen flex items-center justify-center bg-cafe-secondary p-4">
+  <div class="bg-white p-8 md:p-12 rounded-cafe shadow-cafe-card w-full max-w-120 border border-white">
+    <div class="flex flex-col items-center mb-10 text-center">
+      <div class="bg-cafe-primary p-4 rounded-full mb-6 shadow-md text-white">
+        <i data-lucide="coffee" style="width: 32px; height: 32px"></i>
       </div>
-
-      <!-- Form Login -->
-      <form id="loginForm" class="space-y-6">
-        <div>
-          <label class="block text-sm font-semibold text-cafe-dark mb-2">
-            Username
-          </label>
-          <div class="relative group">
-            <span
-              class="absolute inset-y-0 left-0 flex items-center pl-4 text-cafe-border group-focus-within:text-cafe-primary transition-colors"
-            >
-              <i data-lucide="user" style="width: 20px; height: 20px"></i>
-            </span>
-            <!-- Input username, pastikan bisa memasukkan akun cafe dan bapenda-->
-            <input
-              id="username"
-              type="text"
-              placeholder="Masukkan username"
-              class="w-full pl-12 pr-4 py-3.5 bg-white border border-cafe-border rounded-xl"
-            />
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-cafe-dark mb-2">
-            Password
-          </label>
-          <div class="relative group">
-            <span
-              class="absolute inset-y-0 left-0 flex items-center pl-4 text-cafe-border group-focus-within:text-cafe-primary transition-colors"
-            >
-              <i data-lucide="lock" style="width: 20px; height: 20px"></i>
-            </span>
-            <!-- Input passwrod, pastikan password diperiksa apakah benar atau tidak -->
-           <input
-    id="password"
-    type="password"
-    placeholder="Masukkan password"
-    class="w-full pl-12 pr-4 py-3.5 bg-white border border-cafe-border rounded-xl"
-/>
-          </div>
-        </div>
-
-        <!-- Tombol sign in, jika username atau password salah maka perlu menampilkan pesan error -->
-        <button
-    type="submit"
-    class="w-full bg-cafe-primary hover:bg-cafe-accent text-white font-bold py-4 rounded-xl shadow-lg"
->
-    Sign In
-</button>
-      </form>
+      <h1 class="text-3xl font-bold text-cafe-dark tracking-tight">
+        Cafe Monitoring System
+      </h1>
+      <p class="text-cafe-muted mt-2 font-medium">
+        Sign in ke akun Bapenda atau akun cafe mu
+      </p>
     </div>
 
-    <script>
-      lucide.createIcons();
-    </script>
-    <script src="view/bapenda/js/login.js"></script>
-  </body>
+    <!-- Form Login -->
+    <form id="loginForm" class="space-y-6">
+      <!-- USERNAME -->
+      <div>
+        <label class="block text-sm font-semibold text-cafe-dark mb-2">
+          Username
+        </label>
+        <div class="relative group">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-cafe-border">
+            <i data-lucide="user" style="width: 20px; height: 20px"></i>
+          </span>
+          <input id="username" type="text" placeholder="Masukkan username"
+            class="w-full pl-12 pr-4 py-3.5 bg-white border border-cafe-border rounded-xl" />
+        </div>
+        <!-- ERROR -->
+        <p id="usernameError" class="text-red-500 text-sm mt-1 hidden"></p>
+      </div>
+
+      <!-- PASSWORD -->
+      <div>
+        <label class="block text-sm font-semibold text-cafe-dark mb-2">
+          Password
+        </label>
+        <div class="relative group">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-cafe-border">
+            <i data-lucide="lock" style="width: 20px; height: 20px"></i>
+          </span>
+          <input id="password" type="password" placeholder="Masukkan password"
+            class="w-full pl-12 pr-4 py-3.5 bg-white border border-cafe-border rounded-xl" />
+        </div>
+        <!-- ERROR -->
+        <p id="passwordError" class="text-red-500 text-sm mt-1 hidden"></p>
+      </div>
+
+      <!-- Tombol sign in, jika username atau password salah maka perlu menampilkan pesan error -->
+      <button id="loginButton" type="submit"
+        class="w-full bg-cafe-primary hover:bg-cafe-accent text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2">
+        <!-- TEXT -->
+        <span id="btnText">Sign In</span>
+
+        <!-- SPINNER -->
+        <svg id="btnSpinner" class="hidden animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none"
+          viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"></circle>
+          <path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+      </button>
+    </form>
+  </div>
+
+  <script>
+    lucide.createIcons();
+  </script>
+  <script src="view/bapenda/js/login.js"></script>
+</body>
+
 </html>
