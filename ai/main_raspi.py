@@ -1,13 +1,22 @@
 from ultralytics import YOLO
 import cv2
 import time
+from firebase_handler import FirebaseHandler
 
-# Load model (gunakan versi ringan)
-model = YOLO("best.pt")
+from roi_manager import ROI, ROIManager
 
+firebase = FirebaseHandler()
+cafe_id = "cafe1"
+
+# =========================
+# LOAD MODEL
+# =========================
+model = YOLO("model/best.pt")
 print("Classes:", model.names)
 
-# Ambil class ID
+# =========================
+# GET CLASS ID
+# =========================
 food_class_id = None
 person_class_id = None
 
@@ -23,29 +32,57 @@ if food_class_id is None or person_class_id is None:
 
 print(f"Food ID: {food_class_id}, Person ID: {person_class_id}")
 
-# Kamera (Linux / Raspberry Pi)
-cap = cv2.VideoCapture(0)  # HAPUS CAP_DSHOW
-
-# Turunkan resolusi untuk performa
+# =========================
+# INIT CAMERA
+# =========================
+cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-print("Resolution:",
-      cap.get(cv2.CAP_PROP_FRAME_WIDTH),
-      cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+# =========================
+# INIT ROI
+# =========================
+roi_manager = ROIManager()
 
+roi_manager.add_roi(ROI(1, [(0, 300), (300, 300), (300, 400), (0, 400)], offset_y=50))
+roi_manager.add_roi(ROI(2, [(400, 200), (700, 200), (700, 400), (400, 400)], offset_y=50))
+
+# =========================
+# SESSION TRACKING
+# =========================
+
+roi_sessions = {
+    roi.roi_id: {
+        "start_time": None,
+        "counted": False
+    }
+    for roi in roi_manager.rois
+} 
+
+# =========================
+# INIT STATE
+# =========================
+roi_states = {roi.roi_id: "Empty" for roi in roi_manager.rois}
+
+# =========================
+# FPS
+# =========================
 prev_time = time.time()
 
+# =========================
+# MAIN LOOP
+# =========================
 while True:
     ret, frame = cap.read()
     if not ret:
         print("Failed to grab frame")
         break
 
-    # Resize tambahan (opsional, bantu FPS)
     frame = cv2.resize(frame, (640, 480))
 
-    # Inference (gunakan stream=True untuk efisiensi)
+    # =========================
+    # YOLO INFERENCE
+    # =========================
     results = model(
         frame,
         conf=0.5,
@@ -55,38 +92,108 @@ while True:
     )
 
     annotated_frame = results[0].plot()
-
     boxes = results[0].boxes
 
-    food_count = 0
-    person_count = 0
+    # =========================
+    # COUNT OBJECT
+    # =========================
+    if boxes is not None and len(boxes) > 0:
+        roi_results = roi_manager.count_objects(
+            boxes,
+            boxes.cls,
+            food_class_id,
+            person_class_id
+        )
+    else:
+        roi_results = {roi.roi_id: {"person": 0, "food": 0}
+                       for roi in roi_manager.rois}
 
-    if boxes is not None:
-        for cls in boxes.cls:
-            if int(cls) == food_class_id:
-                food_count += 1
-            elif int(cls) == person_class_id:
-                person_count += 1
+    # =========================
+    # UPDATE STATE
+    # =========================
+    for roi_id, data in roi_results.items():
+        state = roi_states[roi_id]
+        session = roi_sessions[roi_id]
 
-    # Overlay text
-    cv2.putText(annotated_frame, f"Food: {food_count}",
-                (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
-                0.8, (0, 255, 0), 2)
+        person = data["person"]
 
-    cv2.putText(annotated_frame, f"Person: {person_count}",
-                (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
-                0.8, (255, 255, 0), 2)
+        # =========================
+        # START TIMER SAAT ACTIVE
+        # =========================
+        if state == "Active" and session["start_time"] is None:
+            session["start_time"] = time.time()
 
+        # =========================
+        # HITUNG PELANGGAN (SETELAH 1 MENIT)
+        # =========================
+        if state == "Active" and not session["counted"]:
+            elapsed = time.time() - session["start_time"]
+
+            if elapsed >= 60:
+                firebase.update_pelanggan(cafe_id)
+                session["counted"] = True
+                print(f"[FIREBASE] Pelanggan counted T{roi_id}")
+
+        # =========================
+        # SAAT SERVED → KIRIM SERVICE
+        # =========================
+        if state == "Served" and session["start_time"] is not None:
+
+            waiting_time = int(time.time() - session["start_time"])
+
+            firebase.save_service(
+                cafe_id=cafe_id,
+                table_number=roi_id,
+                waiting_time=waiting_time
+            )
+
+            print(f"[FIREBASE] Service saved T{roi_id}")
+
+            # reset session
+            roi_sessions[roi_id] = {
+                "start_time": None,
+                "counted": False
+            }
+
+        # =========================
+        # RESET SAAT EMPTY
+        # =========================
+        if state == "Empty":
+            roi_sessions[roi_id] = {
+                "start_time": None,
+                "counted": False
+            }
+
+    # =========================
+    # DRAW ROI + STATUS (ke annotated_frame!)
+    # =========================
+    roi_manager.draw_all_with_status(
+        annotated_frame,
+        roi_results,
+        roi_states
+    )
+
+    # =========================
     # FPS
+    # =========================
     current_time = time.time()
     fps = 1 / (current_time - prev_time)
     prev_time = current_time
 
-    cv2.putText(annotated_frame, f"FPS: {int(fps)}",
-                (20, 120), cv2.FONT_HERSHEY_SIMPLEX,
-                0.8, (255, 0, 0), 2)
+    cv2.putText(
+        annotated_frame,
+        f"FPS: {int(fps)}",
+        (20, 30),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.7,
+        (255, 0, 0),
+        2
+    )
 
-    cv2.imshow("Detection", annotated_frame)
+    # =========================
+    # SHOW
+    # =========================
+    cv2.imshow("Cafe Monitoring System", annotated_frame)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break

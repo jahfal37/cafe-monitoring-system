@@ -9,6 +9,10 @@ from flask_jwt_extended import (
     get_jwt_identity,
     get_jwt
 )
+import threading
+import time
+import cv2
+from flask import Response
 
 import firebase_admin
 from firebase_admin import credentials, firestore, db
@@ -671,7 +675,116 @@ def update_device(device_code):
 
     return jsonify({"message": "Status diupdate"})
 
+# =====================================================
+# VIDEO STREAMING (FIX + BUFFER + STABIL)
+# =====================================================
 
+class CameraStream:
+    def __init__(self, src=0):
+        self.src = src
+        self.cap = cv2.VideoCapture(src)  # 🔥 TANPA DSHOW
+
+        time.sleep(1)  # kasih waktu init kamera
+
+        print(f"[INFO] Kamera {src} dibuka:", self.cap.isOpened())
+
+        self.frame = None
+        self.lock = threading.Lock()
+        self.running = True
+
+        thread = threading.Thread(target=self.update, daemon=True)
+        thread.start()
+
+    def update(self):
+        while self.running:
+            if not self.cap.isOpened():
+                print(f"[WARNING] Kamera {self.src} reconnecting...")
+                self.cap.release()
+                self.cap = cv2.VideoCapture(self.src)
+                time.sleep(1)
+                continue
+
+            success, frame = self.cap.read()
+
+            if not success or frame is None:
+                print(f"[ERROR] Kamera {self.src} gagal ambil frame")
+                time.sleep(0.1)
+                continue
+
+            # resize biar ringan
+            frame = cv2.resize(frame, (640, 480))
+            frame = cv2.flip(frame, 1)
+
+            # kasih label biar kelihatan hidup
+            cv2.putText(frame, f"Camera {self.src}", (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+            with self.lock:
+                self.frame = frame
+
+            time.sleep(0.03)  # ~30 FPS
+
+    def get_frame(self):
+        with self.lock:
+            return self.frame
+
+    def stop(self):
+        self.running = False
+        self.cap.release()
+
+
+# =========================
+# CAMERA MANAGER (LAZY LOAD)
+# =========================
+cameras = {}
+
+def get_camera(index):
+    if index not in cameras:
+        print(f"[INFO] Membuka kamera index {index}")
+        cameras[index] = CameraStream(index)
+    return cameras[index]
+
+
+# =========================
+# FRAME GENERATOR
+# =========================
+def gen_frames(camera):
+    while True:
+        frame = camera.get_frame()
+
+        if frame is None:
+            time.sleep(0.01)
+            continue
+
+        ret, buffer = cv2.imencode(
+            '.jpg',
+            frame,
+            [int(cv2.IMWRITE_JPEG_QUALITY), 70]  # kompres biar ringan
+        )
+
+        if not ret:
+            continue
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' +
+               buffer.tobytes() + b'\r\n')
+
+
+# =========================
+# ROUTES
+# =========================
+@app.route('/video_feed_1')
+def video_feed_1():
+    cam = get_camera(0)
+    return Response(gen_frames(cam),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/video_feed_2')
+def video_feed_2():
+    cam = get_camera(1)
+    return Response(gen_frames(cam),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # =====================================================
 # RUN APP
