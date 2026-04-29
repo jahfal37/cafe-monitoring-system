@@ -14,7 +14,13 @@ from roi_logic import ROIStateMachine
 with open("config.json") as f:
     config = json.load(f)
 
-cafe_id = config["cafe_id"]
+cafe_id = os.getenv("CAFE_ID", config.get("cafe_id"))
+
+if not cafe_id:
+    raise ValueError("CAFE_ID belum diset di env atau config.json")
+
+print("[CONFIG] Cafe ID:", cafe_id)
+
 
 print("[CONFIG] Cafe ID:", cafe_id)
 

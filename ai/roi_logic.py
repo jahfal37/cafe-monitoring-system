@@ -20,7 +20,13 @@ db = firestore.client()
 
 
 class ROIStateMachine:
-    def __init__(self, roi_id, cafe_id="cafe1"):
+    def __init__(self, roi_id, cafe_id):
+        if not cafe_id:
+            raise ValueError("cafe_id wajib diisi")
+
+        self.roi_id = roi_id
+        self.cafe_id = cafe_id
+
         self.roi_id = roi_id
         self.cafe_id = cafe_id
 
