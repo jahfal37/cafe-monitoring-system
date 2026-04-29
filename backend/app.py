@@ -9,10 +9,28 @@ from flask_jwt_extended import (
     get_jwt_identity,
     get_jwt
 )
-
+import threading
+import time
+import cv2
+from flask import Response
 import firebase_admin
-from firebase_admin import credentials, firestore, db
+from firebase_admin import credentials, firestore
+from ultralytics import YOLO
+import os
+import sys
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# baru boleh pakai
+AI_PATH = os.path.join(BASE_DIR, "../ai")
+sys.path.append(AI_PATH)
+
+import frame_store
+
+# path model
+model_path = os.path.join(BASE_DIR, "../ai/model/best.pt")
+
+model = YOLO(model_path)
 
 
 # =====================================================
@@ -50,6 +68,8 @@ hari_list = [
 # =====================================================
 # ROOT
 # =====================================================
+
+
 @app.route("/")
 def home():
     return "Backend Aktif"
@@ -57,6 +77,8 @@ def home():
 # =====================================================
 # LOGIN
 # =====================================================
+
+
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
@@ -102,25 +124,57 @@ def login():
 # =====================================================
 # TAMBAH DATA PELANGGAN
 # =====================================================
+
+
 @app.route("/api/tambah", methods=["POST"])
 def tambah():
-    data = request.json
+    try:
+        data = request.json
 
-    today = date.today()
+        cafe_id = data.get("cafe_id")
+        jumlah = int(data.get("jumlah", 0))
+        table_number = data.get("table_number")
 
-    db.collection("pelanggan").add({
-        "cafe_id": data["cafe_id"],
-        "tanggal": today.isoformat(),
-        "bulan": today.month,
-        "tahun": today.year,
-        "jumlah": int(data["jumlah"])
-    })
+        if not cafe_id or jumlah <= 0:
+            return jsonify({"error": "Data tidak valid"}), 400
 
-    return jsonify({"message": "Data berhasil disimpan"})
+        today = date.today()
+        tanggal = today.isoformat()
+
+        # 🔥 DOC ID = cafe + tanggal (UNIK PER HARI)
+        doc_id = f"{cafe_id}_{tanggal}"
+
+        doc_ref = db.collection("pelanggan").document(doc_id)
+        doc = doc_ref.get()
+
+        if doc.exists:
+            # 🔥 TAMBAH jumlah (tidak bikin dokumen baru)
+            doc_ref.update({
+                "jumlah": firestore.Increment(jumlah)
+            })
+        else:
+            # 🔥 BUAT BARU HANYA SEKALI PER HARI
+            doc_ref.set({
+                "cafe_id": cafe_id,
+                "tanggal": tanggal,
+                "bulan": today.month,
+                "tahun": today.year,
+                "jumlah": jumlah
+            })
+
+        print(f"[API] +{jumlah} pelanggan ({cafe_id})")
+
+        return jsonify({"message": "Data berhasil diupdate"})
+
+    except Exception as e:
+        print("ERROR TAMBAH:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 # =====================================================
 # DASHBOARD CAFE
 # =====================================================
+
+
 @app.route("/api/cafe/dashboard")
 @jwt_required()
 def dashboard_cafe():
@@ -173,6 +227,8 @@ def dashboard_cafe():
 # =====================================================
 # SELECT CAFE BAPENDA
 # =====================================================
+
+
 @app.route("/api/bapenda/cafes", methods=["GET"])
 @jwt_required()
 def get_cafes_bapenda():
@@ -203,10 +259,11 @@ def get_cafes_bapenda():
             "address": cafe.get("address"),
             "open_time": cafe.get("open_time"),     # 🔥 TAMBAH INI
             "close_time": cafe.get("close_time"),   # 🔥 TAMBAH INI
-            "table_count": cafe.get("table_count", 0), # 🔥 TAMBAH INI
+            "table_count": cafe.get("table_count", 0),  # 🔥 TAMBAH INI
         })
 
     return jsonify(result)
+
 
 @app.route("/api/cafes", methods=["GET"])
 @jwt_required()
@@ -222,7 +279,7 @@ def get_cafes():
 
     return jsonify(result)
 
-    
+
 # =====================================================
 # DASHBOARD BAPENDA
 # =====================================================
@@ -249,15 +306,28 @@ def dashboard_bapenda(cafe_id):
 
     data = []
 
+    # 🔥 SEMUA HARUS DI DALAM FUNCTION
     for doc in docs:
         item = doc.to_dict()
-        tanggal = datetime.strptime(item["tanggal"], "%Y-%m-%d")
+        tanggal_field = item.get("tanggal")
 
-        data.append({
-            "hari": hari_list[tanggal.weekday()],
-            "tanggal": tanggal.day,
-            "jumlah": item["jumlah"]
-        })
+        try:
+            if isinstance(tanggal_field, str):
+                tanggal = datetime.strptime(tanggal_field, "%Y-%m-%d")
+            elif isinstance(tanggal_field, int):
+                tanggal = datetime(tahun, bulan, tanggal_field)
+            else:
+                continue
+
+            data.append({
+                "hari": hari_list[tanggal.weekday()],
+                "tanggal": tanggal.day,
+                "jumlah": item.get("jumlah", 0)
+            })
+
+        except Exception as e:
+            print("SKIP DATA ERROR:", item, e)
+            continue
 
     total = sum(x["jumlah"] for x in data)
     rata = round(total / len(data)) if data else 0
@@ -273,6 +343,8 @@ def dashboard_bapenda(cafe_id):
 # =====================================================
 # REGISTER BAPENDA
 # =====================================================
+
+
 @app.route("/api/register-bapenda", methods=["POST"])
 def register_bapenda():
     data = request.json
@@ -407,6 +479,7 @@ def update_cafe(cafe_id):
 # DUMMY GENERATOR
 # =====================================================
 
+
 @app.route("/api/seed-pelanggan", methods=["POST"])
 def seed_pelanggan():
     try:
@@ -450,6 +523,8 @@ def seed_pelanggan():
 # ============================
 # GET SERVICES
 # ============================
+
+
 @app.route("/api/services", methods=["GET"])
 @jwt_required()
 def get_services():
@@ -511,6 +586,8 @@ def get_services():
 # ============================
 # POST SERVICES
 # ============================
+
+
 @app.route("/api/services", methods=["POST"])
 @jwt_required()
 def add_service():
@@ -543,6 +620,8 @@ def add_service():
 # ============================
 # GET DEVICES
 # ============================
+
+
 @app.route("/api/devices", methods=["GET"])
 @jwt_required()
 def get_devices():
@@ -575,6 +654,8 @@ def get_devices():
 # ============================
 # POST DEVICES
 # ============================
+
+
 @app.route("/api/devices", methods=["POST"])
 @jwt_required()
 def add_device():
@@ -593,10 +674,11 @@ def add_device():
 
     return jsonify({"message": "Device ditambahkan"})
 
-
     # ============================
 # GET DEVICES BAPENDA
 # ============================
+
+
 @app.route("/api/bapenda/devices/<string:cafe_id>", methods=["GET"])
 @jwt_required()
 def get_devices_bapenda(cafe_id):
@@ -633,6 +715,8 @@ def get_devices_bapenda(cafe_id):
     # ============================
 # DELETE CAFE (BAPENDA)
 # ============================
+
+
 @app.route("/api/cafes/<string:cafe_id>", methods=["DELETE"])
 @jwt_required()
 def delete_cafe(cafe_id):
@@ -653,6 +737,8 @@ def delete_cafe(cafe_id):
 # ============================
 # PUT DEVICES YOLO
 # ============================
+
+
 @app.route("/api/devices/<string:device_code>", methods=["PUT"])
 def update_device(device_code):
     data = request.json
@@ -671,6 +757,163 @@ def update_device(device_code):
 
     return jsonify({"message": "Status diupdate"})
 
+# =====================================================
+# VIDEO STREAMING (AMBIL DARI frame_store)
+# =====================================================
+class CameraStream:
+    def __init__(self, src=0):
+        self.src = src
+        self.frame = None
+        self.lock = threading.Lock()
+        self.running = True
+
+        thread = threading.Thread(target=self.update, daemon=True)
+        thread.start()
+
+    def update(self):
+        while self.running:
+            frame = frame_store.frame  # 🔥 ambil dari main.py
+
+            if frame is None:
+                time.sleep(0.01)
+                continue
+
+            annotated_frame = frame.copy()
+
+            # label kamera (optional)
+            cv2.putText(
+                annotated_frame,
+                f"AI Camera {self.src}",
+                (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0),
+                2
+            )
+
+            with self.lock:
+                self.frame = annotated_frame
+
+            time.sleep(0.03)
+
+    def get_frame(self):
+        with self.lock:
+            return self.frame
+
+    def stop(self):
+        self.running = False
+
+
+# =========================
+# CAMERA MANAGER (LAZY LOAD)
+# =========================
+cameras = {}
+
+
+def get_camera(index):
+    if index not in cameras:
+        print(f"[INFO] Membuat stream virtual {index}")
+        cameras[index] = CameraStream(index)
+    return cameras[index]
+
+
+# =========================
+# FRAME GENERATOR
+# =========================
+def gen_frames(camera):
+    while True:
+        frame = camera.get_frame()
+
+        if frame is None:
+            time.sleep(0.01)
+            continue
+
+        ret, buffer = cv2.imencode(
+            '.jpg',
+            frame,
+            [int(cv2.IMWRITE_JPEG_QUALITY), 70]
+        )
+
+        if not ret:
+            continue
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' +
+               buffer.tobytes() + b'\r\n')
+
+
+# =========================
+# ROUTES
+# =========================
+@app.route('/video_feed_1')
+def video_feed_1():
+    cam = get_camera(0)
+    return Response(
+        gen_frames(cam),
+        mimetype='multipart/x-mixed-replace; boundary=frame'
+    )
+
+
+@app.route('/video_feed_2')
+def video_feed_2():
+    cam = get_camera(1)
+    return Response(
+        gen_frames(cam),
+        mimetype='multipart/x-mixed-replace; boundary=frame'
+    )
+
+
+@app.route("/api/meja-summary", methods=["GET"])
+def meja_summary():
+    docs = db.collection("pelanggan").stream()
+
+    result = {}
+
+    for doc in docs:
+        item = doc.to_dict()
+        meja = item.get("table_number", "unknown")
+
+        result[meja] = result.get(meja, 0) + item.get("jumlah", 0)
+
+    return jsonify(result)
+
+
+@app.route("/api/update-meja", methods=["POST"])
+def update_meja():
+    try:
+        data = request.json
+
+        cafe_id = data.get("cafe_id")
+        table_number = data.get("table_number")
+        total = int(data.get("total", 0))
+
+        if not cafe_id or not table_number:
+            return jsonify({"error": "Data tidak lengkap"}), 400
+
+        today = date.today().isoformat()
+
+        # 🔥 DOC ID UNIK (kunci konsistensi)
+        doc_id = f"{cafe_id}_{today}_{table_number}"
+
+        payload = {
+            "cafe_id": cafe_id,
+            "table_number": table_number,
+            "tanggal": today,
+            "bulan": date.today().month,
+            "tahun": date.today().year,
+            "total": total,
+            "updated_at": datetime.utcnow().isoformat()
+        }
+
+        db.collection("pelanggan").document(doc_id).set(payload)
+
+        print(f"[UPDATE MEJA] {table_number} = {total}")
+
+        return jsonify({"message": "Update berhasil"})
+
+    except Exception as e:
+        print("ERROR UPDATE:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 
 # =====================================================
@@ -678,4 +921,3 @@ def update_device(device_code):
 # =====================================================
 if __name__ == "__main__":
     app.run(debug=True)
-
