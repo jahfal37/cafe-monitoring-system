@@ -3,6 +3,7 @@ import cv2
 import time
 import os
 import json
+import requests
 import frame_store
 
 from roi_manager import ROI, ROIManager
@@ -14,15 +15,75 @@ from roi_logic import ROIStateMachine
 with open("config.json") as f:
     config = json.load(f)
 
+# ambil cafe_id dulu
 cafe_id = os.getenv("CAFE_ID", config.get("cafe_id"))
 
 if not cafe_id:
     raise ValueError("CAFE_ID belum diset di env atau config.json")
 
+# =========================
+# DEVICE CODE AUTO (ANTI TABRAKAN)
+# =========================
+raw_device = os.getenv("DEVICE_CODE", config.get("device_code", "CAM001"))
+
+# normalisasi (hapus spasi dll)
+raw_device = raw_device.strip()
+
+# kalau belum ada prefix cafe → tambahkan
+if not raw_device.startswith(f"{cafe_id}_"):
+    device_code = f"{cafe_id}_{raw_device}"
+else:
+    device_code = raw_device
+
+# =========================
+# DEBUG
+# =========================
 print("[CONFIG] Cafe ID:", cafe_id)
+print("[CONFIG] Raw Device:", raw_device)
+print("[CONFIG] Final Device:", device_code)
 
 
-print("[CONFIG] Cafe ID:", cafe_id)
+# =========================
+# DEVICE REGISTER
+# =========================
+def register_device():
+    url = "http://127.0.0.1:5000/api/devices/register-ai"
+
+    data = {
+        "cafe_id": cafe_id,
+        "device_code": device_code
+    }
+
+    try:
+        res = requests.post(url, json=data)
+        print("[REGISTER DEVICE]", res.status_code)
+    except Exception as e:
+        print("[ERROR REGISTER DEVICE]:", e)
+
+
+# =========================
+# DEVICE STATUS UPDATE (ANTI SPAM)
+# =========================
+last_update_time = 0
+
+def update_device_status():
+    global last_update_time
+
+    now = time.time()
+
+    if now - last_update_time < 5:
+        return
+
+    last_update_time = now
+
+    try:
+        requests.put(
+            f"http://127.0.0.1:5000/api/devices/{device_code}",
+            json={"status": "active"}
+        )
+    except Exception as e:
+        print("[ERROR UPDATE DEVICE]:", e)
+
 
 # =========================
 # LOAD MODEL
@@ -51,7 +112,7 @@ if food_class_id is None or person_class_id is None:
 print(f"Food ID: {food_class_id}, Person ID: {person_class_id}")
 
 # =========================
-# INIT CAMERA (WINDOWS)
+# INIT CAMERA
 # =========================
 cap = cv2.VideoCapture(0)
 
@@ -67,7 +128,10 @@ if not cap.isOpened():
 # =========================
 roi_manager = ROIManager()
 
-roi_manager.add_roi(ROI(1, [(0, 100), (300, 100), (300, 400), (0, 400)], offset_y=50))
+roi_manager.add_roi(
+    ROI(1, [(0, 100), (300, 100), (300, 400), (0, 400)], offset_y=50)
+)
+
 roi_manager.add_roi(
     ROI(2, [(350, 100), (650, 100), (650, 400), (350, 400)], offset_y=50)
 )
@@ -76,14 +140,18 @@ roi_manager.add_roi(
 # INIT STATE MACHINE
 # =========================
 roi_logic = {
-    roi.roi_id: ROIStateMachine(roi.roi_id, cafe_id) for roi in roi_manager.rois
+    roi.roi_id: ROIStateMachine(roi.roi_id, cafe_id, device_code)
+    for roi in roi_manager.rois
 }
+
 
 roi_states = {roi.roi_id: "EMPTY" for roi in roi_manager.rois}
 
 # =========================
-# FPS
+# START
 # =========================
+register_device()
+
 prev_time = time.time()
 
 # =========================
@@ -95,11 +163,13 @@ while True:
         print("Failed to grab frame")
         break
 
+    update_device_status()
+
     frame = cv2.flip(frame, 1)
     frame = cv2.resize(frame, (640, 480))
 
     # =========================
-    # 🔥 YOLO TRACK (INI YANG DIUBAH)
+    # YOLO TRACK
     # =========================
     results = model.track(
         frame,
@@ -115,23 +185,19 @@ while True:
     boxes = results[0].boxes
 
     # =========================
-    # TRACKED PERSONS (BARU)
+    # TRACK PERSON
     # =========================
-    tracked_persons_per_roi = {roi.roi_id: [] for roi in roi_manager.rois}
+    tracked_persons_per_roi = {
+        roi.roi_id: [] for roi in roi_manager.rois
+    }
 
-    # =========================
-    # COUNT OBJECT (TETAP)
-    # =========================
     if boxes is not None and len(boxes) > 0:
 
         roi_results = roi_manager.count_objects(
             boxes, boxes.cls, food_class_id, person_class_id
         )
 
-        # =========================
-        # 🔥 AMBIL TRACK ID
-        # =========================
-        for i, box in enumerate(boxes):
+        for box in boxes:
             cls = int(box.cls[0])
 
             if cls == person_class_id and box.id is not None:
@@ -141,27 +207,30 @@ while True:
                 cx = int((x1 + x2) / 2)
                 cy = int((y1 + y2) / 2)
 
-                # cek masuk ROI mana
                 for roi in roi_manager.rois:
                     if roi.contains(cx, cy):
-                        tracked_persons_per_roi[roi.roi_id].append({"id": track_id})
-
+                        tracked_persons_per_roi[roi.roi_id].append(
+                            {"id": track_id}
+                        )
     else:
-        roi_results = {roi.roi_id: {"person": 0, "food": 0} for roi in roi_manager.rois}
+        roi_results = {
+            roi.roi_id: {"person": 0, "food": 0}
+            for roi in roi_manager.rois
+        }
 
     # =========================
-    # UPDATE STATE MACHINE
+    # UPDATE STATE
     # =========================
     roi_timers = {}
 
     for roi_id, data in roi_results.items():
 
         food = data["food"]
-
-        # 🔥 GANTI PERSON COUNT → TRACKED PERSONS
         tracked_persons = tracked_persons_per_roi[roi_id]
 
-        state, waiting_time = roi_logic[roi_id].update(tracked_persons, food)
+        state, waiting_time = roi_logic[roi_id].update(
+            tracked_persons, food
+        )
 
         roi_states[roi_id] = state
         roi_timers[roi_id] = waiting_time
@@ -178,35 +247,16 @@ while True:
     )
 
     # =========================
-    # OPTIONAL: DRAW PERSON TIMER (HAPUS JIKA TIDAK PERLU)
-    # =========================
-    for roi_id, logic in roi_logic.items():
-        for pid, pdata in logic.person_timers.items():
-            duration = pdata.get("duration", 0)
-
-            cv2.putText(
-                annotated_frame,
-                f"ID:{pid} {duration}s",
-                (10, 100 + pid * 20),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 255, 0),
-                1,
-            )
-
-    # =========================
-    # 🆕 DRAW TOTAL CUSTOMER
+    # DRAW CUSTOMER
     # =========================
     y_offset = 60
 
     for roi in roi_manager.rois:
         total = roi_logic[roi.roi_id].total_customers
 
-        text = f"T{roi.roi_id} Customers: {total}"
-
         cv2.putText(
             annotated_frame,
-            text,
+            f"T{roi.roi_id} Customers: {total}",
             (20, y_offset),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.6,
@@ -234,12 +284,15 @@ while True:
     )
 
     # =========================
-    # SHOW FRAME (WAJIB DI DALAM LOOP)
+    # SHOW
     # =========================
     cv2.imshow("Cafe Monitoring System", annotated_frame)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
+# =========================
+# CLEANUP
+# =========================
 cap.release()
 cv2.destroyAllWindows()

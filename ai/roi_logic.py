@@ -20,15 +20,13 @@ db = firestore.client()
 
 
 class ROIStateMachine:
-    def __init__(self, roi_id, cafe_id):
+    def __init__(self, roi_id, cafe_id, device_code):
         if not cafe_id:
             raise ValueError("cafe_id wajib diisi")
 
         self.roi_id = roi_id
         self.cafe_id = cafe_id
-
-        self.roi_id = roi_id
-        self.cafe_id = cafe_id
+        self.device_code = device_code
 
         self.state = "EMPTY"
 
@@ -45,10 +43,20 @@ class ROIStateMachine:
         # stabilizer
         self.food_detected_frames = 0
 
-        # CONFIG
+       # =========================
+        # 🔥 CONFIG (EDIT DI SINI)
+        # =========================
         self.EMPTY_TIMEOUT = 60
-        self.FOOD_STABLE_FRAMES = 5
-        self.ALERT_THRESHOLD = 900  # 15 menit
+
+        # 🔥 untuk uji coba (biar cepat trigger)
+        self.FOOD_STABLE_FRAMES = 3   # normal: 5 - 10
+
+        # 🔥 waktu tunggu alert
+        # ⚠️ uji coba: 60 detik | production: 900 (15 menit)
+        self.ALERT_THRESHOLD = 60
+
+        # 🔥 minimal waktu tunggu sebelum dianggap valid
+        self.MIN_WAIT_TIME = 5  # ⚠️ uji coba: 5 detik | production: 30+
 
         # =========================
         # 🆕 PER PERSON TRACKING
@@ -89,7 +97,7 @@ class ROIStateMachine:
     # BACKEND: KIRIM SERVICE
     # =========================
     def send_service(self, waiting_time):
-        url = "http://127.0.0.1:5000/api/services"
+        url = "http://127.0.0.1:5000/api/services/ai"
 
         data = {
             "cafe_id": self.cafe_id,
@@ -101,13 +109,20 @@ class ROIStateMachine:
 
         try:
             res = requests.post(url, json=data)
-            print(f"[SERVICE] ROI {self.roi_id} →", res.status_code)
+
+            print("\n========== SEND SERVICE ==========")
+            print("DATA:", data)
+            print("STATUS:", res.status_code)
+            print("RESPONSE:", res.text)
+
         except Exception as e:
             print("[ERROR SERVICE]:", e)
+
 
     # =========================
     # BACKEND: TOTAL MEJA (OPSIONAL)
     # =========================
+
     def send_table_total(self, total):
         url = "http://127.0.0.1:5000/api/update-meja"
 

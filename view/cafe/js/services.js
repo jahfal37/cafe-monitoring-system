@@ -72,8 +72,8 @@ function loadServices(tanggal) {
         // ======================
         const cards = document.querySelectorAll(".text-4xl");
 
-        cards[0].innerText = `${data.rata_rata || 0} Menit`;
-        cards[1].innerText = `${data.terlama || 0} Menit`;
+        cards[0].innerText = `${formatTime(data.rata_rata)} Menit`;
+        cards[1].innerText = `${formatTime(data.terlama)} Menit`;
         cards[2].innerText = `${data.long_wait || 0} Kasus`;
 
         // ======================
@@ -107,7 +107,7 @@ function loadServices(tanggal) {
                 <tr>
                     <td class="px-6 py-5">${item.customer_code}</td>
                     <td class="px-6 py-5">${item.table_number}</td>
-                    <td class="px-6 py-5">${item.waiting_time} Menit</td>
+                    <td class="px-6 py-5">${formatTime(item.waiting_time)} Menit</td>
                     <td class="px-6 py-5 text-center">
                         <span class="px-6 py-1.5 rounded-full ${statusClass} text-sm font-bold">
                             ${statusText}
@@ -123,6 +123,18 @@ function loadServices(tanggal) {
     .catch(err => {
         console.error("ERROR SERVICES:", err);
     });
+}
+
+function formatTime(seconds) {
+    seconds = Number(seconds) || 0;
+
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    const m = minutes.toString().padStart(2, "0");
+    const s = remainingSeconds.toString().padStart(2, "0");
+
+    return `${m}:${s}`;
 }
 
 // ============================

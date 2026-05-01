@@ -1,3 +1,4 @@
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from datetime import date, datetime
@@ -24,7 +25,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # baru boleh pakai
 AI_PATH = os.path.join(BASE_DIR, "../ai")
 sys.path.append(AI_PATH)
-
 import frame_store
 
 # path model
@@ -618,6 +618,40 @@ def add_service():
     return jsonify({"message": "Data service berhasil ditambahkan"})
 
 # ============================
+# POST SERVICES AI
+# ============================
+
+
+@app.route("/api/services/ai", methods=["POST"])
+def add_service_ai():
+    data = request.json
+
+    required = [
+        "cafe_id",
+        "customer_code",
+        "table_number",
+        "waiting_time",
+        "tanggal"
+    ]
+
+    if not all(k in data for k in required):
+        return jsonify({"error": "Field tidak lengkap"}), 400
+
+    status = "long" if int(data["waiting_time"]) >= 30 else "normal"
+
+    db.collection("services").add({
+        "cafe_id": data["cafe_id"],
+        "customer_code": data["customer_code"],
+        "table_number": data["table_number"],
+        "waiting_time": int(data["waiting_time"]),
+        "status": status,
+        "tanggal": data["tanggal"],
+    })
+
+    return jsonify({"message": "Service dari AI masuk"})
+
+
+# ============================
 # GET DEVICES
 # ============================
 
@@ -741,21 +775,42 @@ def delete_cafe(cafe_id):
 
 @app.route("/api/devices/<string:device_code>", methods=["PUT"])
 def update_device(device_code):
-    data = request.json
+    try:
+        data = request.json
 
-    docs = db.collection("devices")\
-        .where("device_code", "==", device_code)\
-        .get()
+        status = data.get("status")
+        cafe_id = data.get("cafe_id")  # 🔥 penting untuk multi cafe
 
-    if not docs:
-        return jsonify({"error": "Device tidak ditemukan"}), 404
+        if not status:
+            return jsonify({"error": "status wajib"}), 400
 
-    docs[0].reference.update({
-        "status": data["status"],
-        "last_update": datetime.utcnow().isoformat()
-    })
+        query = db.collection("devices")\
+            .where("device_code", "==", device_code)
 
-    return jsonify({"message": "Status diupdate"})
+        # 🔥 kalau pakai multi cafe → filter juga
+        if cafe_id:
+            query = query.where("cafe_id", "==", cafe_id)
+
+        docs = query.get()
+
+        if not docs:
+            return jsonify({"error": "Device tidak ditemukan"}), 404
+
+        for doc in docs:
+            doc.reference.update({
+                "status": status,
+                "last_update": datetime.utcnow().isoformat()
+            })
+
+        return jsonify({
+            "message": "Status device berhasil diupdate",
+            "device_code": device_code,
+            "status": status
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 # =====================================================
 # VIDEO STREAMING (AMBIL DARI frame_store)
@@ -914,6 +969,71 @@ def update_meja():
     except Exception as e:
         print("ERROR UPDATE:", str(e))
         return jsonify({"error": str(e)}), 500
+
+# =====================================================
+# REGISTER AI DEVICE
+# =====================================================
+
+
+@app.route("/api/devices/register-ai", methods=["POST"])
+def register_device_ai():
+    data = request.json
+
+    cafe_id = data.get("cafe_id")
+    device_code = data.get("device_code")
+
+    if not cafe_id or not device_code:
+        return jsonify({"error": "Data tidak lengkap"}), 400
+
+    # cek sudah ada atau belum
+    docs = db.collection("devices")\
+        .where("device_code", "==", device_code)\
+        .get()
+
+    if docs:
+        return jsonify({"message": "Device sudah terdaftar"})
+
+    db.collection("devices").add({
+        "cafe_id": cafe_id,
+        "device_code": device_code,
+        "status": "inactive",
+        "last_update": datetime.utcnow().isoformat()
+    })
+
+    return jsonify({"message": "Device berhasil didaftarkan"})
+
+# =====================================================
+# AI SERVICE
+# =====================================================
+    @app.route("/api/ai/services", methods=["POST"])
+    def ai_add_service():
+        data = request.json
+
+        required = [
+            "cafe_id",
+            "device_code",
+            "customer_code",
+            "table_number",
+            "waiting_time",
+            "tanggal"
+        ]
+
+        if not all(k in data for k in required):
+            return jsonify({"error": "Field tidak lengkap"}), 400
+
+        status = "long" if int(data["waiting_time"]) >= 30 else "normal"
+
+        db.collection("services").add({
+            "cafe_id": data["cafe_id"],
+            "device_code": data["device_code"],  # 🔥 penting
+            "customer_code": data["customer_code"],
+            "table_number": data["table_number"],
+            "waiting_time": int(data["waiting_time"]),
+            "status": status,
+            "tanggal": data["tanggal"]
+        })
+
+        return jsonify({"message": "Service dari AI masuk"})
 
 
 # =====================================================
