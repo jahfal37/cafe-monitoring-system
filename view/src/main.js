@@ -20,6 +20,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const monthSelect = document.getElementById("monthSelect");
   const yearSelect = document.getElementById("yearSelect");
 
+  const publicPages = [
+    "index.html",
+    "add-cafe.html",
+    "setup-cameras.html"
+  ];
+
+  const currentPath = window.location.pathname;
+  const token = localStorage.getItem("token");
+  const isPublicPage = publicPages.some(page =>
+  currentPath.includes(page)
+  );
+
+  // ============================
+  // AUTO GUARD (SAFE)
+  // ============================
+
+ if (!isPublicPage && !token) {
+  window.location.href = "./index.html";
+  }
+
   // ============================
   // LOGOUT MODAL (SAFE)
   // ============================

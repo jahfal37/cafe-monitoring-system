@@ -2,15 +2,16 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-const char* ssid = "asistenaja";
-const char* password = "digidawpalingcool";
+const char* ssid = "Buya Danzel";
+const char* password = "priasigma";
 
-const char* mqtt_server = "192.168.0.145";
+const char* mqtt_server = "10.198.49.53";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 #define BUZZER 22
+#define LED 25
 
 // =========================
 // WIFI
@@ -32,25 +33,26 @@ void setup_wifi() {
 }
 
 // =========================
-// BUZZER (NON BLOCKING STYLE SEDERHANA)
+// ALERT (BUZZER + LED)
 // =========================
-void buzzer_alert() {
-  Serial.println("BUZZER TRIGGERED!");
+void alert_signal() {
+  Serial.println("ALERT TRIGGERED!");
 
   for (int i = 0; i < 10; i++) {
     digitalWrite(BUZZER, HIGH);
+    digitalWrite(LED, HIGH);
     delay(300);
+
     digitalWrite(BUZZER, LOW);
+    digitalWrite(LED, LOW);
     delay(300);
   }
 }
 
 // =========================
-// CALLBACK MQTT (JSON PARSE)
+// CALLBACK MQTT
 // =========================
 void callback(char* topic, byte* message, unsigned int length) {
-
-  Serial.print("Message arrived: ");
 
   String payload;
   for (int i = 0; i < length; i++) {
@@ -59,38 +61,30 @@ void callback(char* topic, byte* message, unsigned int length) {
 
   Serial.println(payload);
 
-  // =========================
-  // PARSE JSON
-  // =========================
   StaticJsonDocument<200> doc;
 
-  DeserializationError error = deserializeJson(doc, payload);
-
-  if (error) {
-    Serial.print("JSON parse failed: ");
-    Serial.println(error.c_str());
+  if (deserializeJson(doc, payload)) {
+    Serial.println("JSON parse error");
     return;
   }
 
   int table = doc["table"];
   int waiting_time = doc["waiting_time"];
 
-  Serial.print("Table: ");
-  Serial.println(table);
-
-  Serial.print("Waiting Time: ");
-  Serial.println(waiting_time);
+  Serial.printf("Table: %d | Waiting: %d\n", table, waiting_time);
 
   // =========================
-  // LOGIC BUZZER
+  // LOGIC
   // =========================
   if (waiting_time >= 10) {
-    buzzer_alert();
+    alert_signal();
+  } else {
+    digitalWrite(LED, LOW);  // pastikan mati 
   }
 }
 
 // =========================
-// RECONNECT MQTT
+// MQTT RECONNECT
 // =========================
 void reconnect() {
   while (!client.connected()) {
@@ -100,12 +94,9 @@ void reconnect() {
     if (client.connect("ESP32_client")) {
 
       Serial.println("connected");
-
-      // topic baru (JSON)
       client.subscribe("cafe/cafe1/alert");
 
     } else {
-
       Serial.print("failed, rc=");
       Serial.println(client.state());
       delay(2000);
@@ -118,12 +109,15 @@ void reconnect() {
 // =========================
 void setup() {
   pinMode(BUZZER, OUTPUT);
-  digitalWrite(BUZZER, HIGH);
-  delay(500);
+  pinMode(LED, OUTPUT);
+
   digitalWrite(BUZZER, LOW);
+  digitalWrite(LED, LOW);
 
   Serial.begin(115200);
+
   setup_wifi();
+
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 }

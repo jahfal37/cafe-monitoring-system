@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,16 +32,13 @@
 
                 <div>
                     <label class="block text-sm font-bold text-cafe-dark mb-3">Nama cafe</label>
-                    <input type="text" id="name"
-                        placeholder="Masukkan nama cafe yang baru"
+                    <input type="text" id="name" placeholder="Masukkan nama cafe yang baru"
                         class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
                 </div>
 
                 <div>
                     <label class="block text-sm font-bold text-cafe-dark mb-3">Alamat</label>
-                    <textarea id="address"
-                        placeholder="Masukkan alamat cafe yang baru"
-                        rows="4"
+                    <textarea id="address" placeholder="Masukkan alamat cafe yang baru" rows="4"
                         class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl resize-none"></textarea>
                 </div>
 
@@ -60,29 +58,31 @@
 
                 <div>
                     <label class="block text-sm font-bold text-cafe-dark mb-3">Jumlah Meja</label>
-                    <input type="number" id="table_count"
-                        placeholder="Masukkan jumlah meja yang baru"
+                    <input type="number" id="table_count" placeholder="Masukkan jumlah meja yang baru"
                         class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
                 </div>
 
-                <div>
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Jumlah Kamera</label>
-                    <input type="number" id="camera_count"
-                        placeholder="Masukkan jumlah kamera yang baru"
-                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
+                <div class="pt-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-cafe-dark">Kamera Cafe</h3>
+
+                        <button type="button" id="addCameraBtn" class="text-sm font-bold text-cafe-primary">
+                            + Tambah Kamera
+                        </button>
+                    </div>
+
+                    <div id="cameraContainer" class="space-y-4"></div>
                 </div>
 
                 <div>
                     <label class="block text-sm font-bold text-cafe-dark mb-3">Username</label>
-                    <input type="text" id="username"
-                        placeholder="Masukkan username yang baru"
+                    <input type="text" id="username" placeholder="Masukkan username yang baru"
                         class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
                 </div>
 
                 <div>
                     <label class="block text-sm font-bold text-cafe-dark mb-3">Password</label>
-                    <input type="password" id="password"
-                        placeholder="Masukkan password yang baru"
+                    <input type="password" id="password" placeholder="Masukkan password yang baru"
                         class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
                 </div>
 
@@ -92,8 +92,7 @@
                         Batal
                     </button>
 
-                    <button type="submit"
-                        class="flex-1 bg-cafe-primary text-white py-4 rounded-xl">
+                    <button type="submit" class="flex-1 bg-cafe-primary text-white py-4 rounded-xl">
                         Update
                     </button>
                 </div>
@@ -109,7 +108,8 @@
     </script>
 
     <!-- 🔥 SCRIPT UTAMA (PINDAH KE JS) -->
-<script src="js/edit-cafe-information.js"></script>
+    <script src="js/edit-cafe-information.js"></script>
 
 </body>
+
 </html>

@@ -33,7 +33,7 @@ class ROIStateMachine:
 
         # MQTT
         self.mqtt = MQTTHandler()
-        self.alert_sent = False   # ✅ anti spam buzzer
+        self.alert_sent = False
 
         # stabilizer
         self.food_detected_frames = 0
@@ -43,9 +43,118 @@ class ROIStateMachine:
         self.FOOD_STABLE_FRAMES = 5
         self.ALERT_THRESHOLD = 900  # 15 menit
 
+        # =========================
+        # 🆕 PER PERSON TRACKING
+        # =========================
+        self.person_timers = {}
+        self.total_customers = 0
+        self.CUSTOMER_VALID_TIME = 10  # 5 menit
+        self.TRACK_LOST_TIMEOUT = 8  # toleransi hilang ID (detik)
+
+        # =========================
+        # 🆕 ANTI DOUBLE COUNT (15 MENIT)
+        # =========================
+        self.counted_history = []
+        # format: {"pos": (x,y), "time": timestamp}
+
+        self.RECOUNT_BLOCK_TIME = 900   # 15 menit
+        self.RECOUNT_DISTANCE = 120     # toleransi pixel
+
     # =========================
-    def update(self, person_count, food_count):
+    def update(self, tracked_persons, food_count):
         now = time.time()
+
+        # ambil ID aktif
+        current_ids = set([p["id"] for p in tracked_persons])
+
+        # =========================
+        # INIT / UPDATE PERSON
+        # =========================
+        for person in tracked_persons:
+            pid = person["id"]
+            pos = person.get("pos", (0, 0))
+
+            if pid not in self.person_timers:
+                self.person_timers[pid] = {
+                    "start": now,
+                    "counted": False,
+                    "duration": 0,
+                    "last_seen": now,
+                    "pos": pos
+                }
+            else:
+                self.person_timers[pid]["last_seen"] = now
+                self.person_timers[pid]["pos"] = pos
+
+        # =========================
+        # HANDLE ORANG HILANG (GRACE PERIOD)
+        # =========================
+        for pid in list(self.person_timers.keys()):
+            last_seen = self.person_timers[pid]["last_seen"]
+
+            if now - last_seen > self.TRACK_LOST_TIMEOUT:
+                del self.person_timers[pid]
+
+        # =========================
+        # VALIDASI CUSTOMER (ANTI DOUBLE COUNT)
+        # =========================
+        for pid, pdata in self.person_timers.items():
+
+            duration = now - pdata["start"]
+            pdata["duration"] = int(duration)
+
+            print(f"ID {pid} | durasi {duration:.1f}s | counted {pdata['counted']}")
+
+            # 🔥 hanya proses kalau sudah SERVED
+            if self.state != "SERVED":
+                continue
+
+            # 🔥 sudah pernah dihitung → skip
+            if pdata["counted"]:
+                continue
+
+            # 🔥 belum cukup durasi → skip
+            if duration < self.CUSTOMER_VALID_TIME:
+                continue
+
+            pos = pdata.get("pos", (0, 0))
+            is_duplicate = False
+
+            for hist in self.counted_history:
+                dist = ((pos[0] - hist["pos"][0])**2 + (pos[1] - hist["pos"][1])**2) ** 0.5
+                time_diff = now - hist["time"]
+
+                if dist < self.RECOUNT_DISTANCE and time_diff < self.RECOUNT_BLOCK_TIME:
+                    is_duplicate = True
+                    break
+
+            pdata["counted"] = True  # 🔥 set dulu biar aman
+
+            if not is_duplicate:
+                self.total_customers += 1
+                self.send_customer(pid, duration)
+
+                self.counted_history.append({
+                    "pos": pos,
+                    "time": now
+                })
+
+                print(f"[CUSTOMER] ID {pid} dihitung (baru)")
+            else:
+                print(f"[SKIP] ID {pid} dianggap pelanggan lama (<15 menit)")
+
+        # =========================
+        # CLEAN HISTORY (biar tidak numpuk)
+        # =========================
+        self.counted_history = [
+            h for h in self.counted_history
+            if now - h["time"] < self.RECOUNT_BLOCK_TIME
+        ]
+
+        # =========================
+        # CONVERT COUNT
+        # =========================
+        person_count = len(current_ids)
 
         # =========================
         # TRACK KOSONG
@@ -67,66 +176,42 @@ class ROIStateMachine:
         food_stable = self.food_detected_frames >= self.FOOD_STABLE_FRAMES
 
         # =========================
-        # STATE MACHINE
+        # STATE MACHINE (TIDAK DIUBAH)
         # =========================
-
-        # -------- EMPTY --------
         if self.state == "EMPTY":
             if person_count > 0:
                 self.state = "WAITING"
                 self.start_time = now
                 self.sent = False
-                self.alert_sent = False  # reset alert
+                self.alert_sent = False
 
-                print(f"[ROI {self.roi_id}] → WAITING START")
-
-        # -------- WAITING --------
         elif self.state == "WAITING":
 
             if self.start_time:
                 self.waiting_time = int(now - self.start_time)
 
-            # =========================
-            # 🚨 MQTT ALERT (15 MENIT)
-            # =========================
-            if (
-                self.waiting_time >= self.ALERT_THRESHOLD
-                and not self.alert_sent
-            ):
+            if self.waiting_time >= self.ALERT_THRESHOLD and not self.alert_sent:
                 self.trigger_buzzer()
                 self.alert_sent = True
 
-                print(f"[MQTT] ALERT T{self.roi_id} ({self.waiting_time}s)")
-
-            # =========================
-            # FOOD DATANG
-            # =========================
             if food_stable and not self.sent:
                 self.state = "SERVED"
-
                 self.send_service(self.waiting_time)
                 self.sent = True
 
-                print(f"[ROI {self.roi_id}] → SERVED ({self.waiting_time}s)")
-
-            # =========================
-            # MEJA DITINGGAL
-            # =========================
-            if self.no_person_start and (now - self.no_person_start > self.EMPTY_TIMEOUT):
-                print(f"[ROI {self.roi_id}] RESET (ditinggal sebelum serve)")
+            if self.no_person_start and (
+                now - self.no_person_start > self.EMPTY_TIMEOUT
+            ):
                 self.reset()
 
-        # -------- SERVED --------
         elif self.state == "SERVED":
-
-            if self.no_person_start and (now - self.no_person_start > self.EMPTY_TIMEOUT):
-                print(f"[ROI {self.roi_id}] → EMPTY")
+            if self.no_person_start and (
+                now - self.no_person_start > self.EMPTY_TIMEOUT
+            ):
                 self.reset()
 
         return self.state, self.waiting_time
 
-    # =========================
-    # MQTT TRIGGER
     # =========================
     def trigger_buzzer(self):
         self.mqtt.send_buzzer(
@@ -135,8 +220,6 @@ class ROIStateMachine:
             waiting_time=self.waiting_time
         )
 
-    # =========================
-    # FIREBASE
     # =========================
     def send_service(self, waiting_time):
         now = datetime.now()
@@ -156,7 +239,20 @@ class ROIStateMachine:
 
         db.collection("services").add(data)
 
-        print(f"[FIREBASE] service masuk ROI {self.roi_id}")
+    # =========================
+    def send_customer(self, person_id, duration):
+        now = datetime.now()
+
+        data = {
+            "cafe_id": self.cafe_id,
+            "table_number": f"T{self.roi_id}",
+            "person_id": person_id,
+            "duration": int(duration),
+            "timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),
+            "total_customers": self.total_customers
+        }
+
+        db.collection("customers").add(data)
 
     # =========================
     def reset(self):
@@ -165,5 +261,8 @@ class ROIStateMachine:
         self.no_person_start = None
         self.waiting_time = 0
         self.sent = False
-        self.alert_sent = False  # reset alert
+        self.alert_sent = False
         self.food_detected_frames = 0
+
+        # reset tracking (tapi history tetap)
+        self.person_timers.clear()

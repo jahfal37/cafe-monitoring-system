@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Cafe Baru - Cafe Monitoring System</title>
+    <link rel="stylesheet" href="../src/style.css">
+    <script type="module" src="../src/main.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="min-h-screen bg-cafe-secondary font-sans">
+
+    <nav class="bg-white border-b border-gray-100 px-6 py-4 flex items-center gap-4 shadow-sm">
+        <button onclick="window.location.href='add-cafe.html'"
+            class="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer">
+            <i data-lucide="arrow-left" class="w-6 h-6 text-cafe-dark"></i>
+        </button>
+        <div class="bg-cafe-primary p-2 rounded-lg text-white">
+            <i data-lucide="coffee" class="w-5 h-5"></i>
+        </div>
+        <span class="font-bold text-xl text-cafe-dark">Setup Kamera Cafe</span>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-6 md:p-12">
+
+        <div id="cameraFormContainer" class="space-y-6"></div>
+
+        <button onclick="submitCameras()" class="mt-8 bg-cafe-primary text-white px-6 py-3 rounded-xl font-bold">
+            Simpan Kamera
+        </button>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+
+    <script>
+        console.log(localStorage.getItem("token"));
+        // =========================
+        // LOAD DATA CAFE DARI STEP 1
+        // =========================
+        const cafeData = JSON.parse(localStorage.getItem("tempCafe"));
+
+        if (!cafeData) {
+            alert("Data cafe tidak ditemukan. Silakan isi ulang.");
+            window.location.href = "add-cafe.html";
+        }
+
+        const count = parseInt(cafeData.camera_count) || 1;
+        const container = document.getElementById("cameraFormContainer");
+
+        // =========================
+        // GENERATE FORM KAMERA
+        // =========================
+        for (let i = 1; i <= count; i++) {
+            container.innerHTML += `
+        <div class="bg-white p-6 rounded-xl shadow">
+            <h3 class="font-bold mb-3">Kamera ${i}</h3>
+
+            <input placeholder="Nama Kamera"
+                id="name_${i}"
+                class="w-full mb-2 p-3 border rounded" />
+
+            <input placeholder="Stream URL (contoh: http://192.168.1.10:5000/video_feed_${i})"
+                id="url_${i}"
+                class="w-full p-3 border rounded" />
+        </div>
+        `;
+        }
+
+        // =========================
+        // SUBMIT FINAL
+        // =========================
+        async function submitCameras() {
+            try {
+                // 🔥 STEP 1: CREATE CAFE
+                const cafeResponse = await fetch("http://127.0.0.1:5000/api/cafes", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(cafeData)
+                });
+
+                const cafeResult = await cafeResponse.json();
+
+                if (!cafeResponse.ok) {
+                    alert(cafeResult.error || "Gagal membuat cafe");
+                    return;
+                }
+
+                const cafe_id = cafeResult.id; // 🔥 penting
+
+                // 🔥 STEP 2: CREATE CAMERAS
+                for (let i = 1; i <= count; i++) {
+                    const name = document.getElementById(`name_${i}`).value;
+                    const url = document.getElementById(`url_${i}`).value;
+
+                    if (!url) continue;
+
+                    await window.apiFetch("http://127.0.0.1:5000/api/devices", {
+                        method: "POST",
+                        body: JSON.stringify({
+                            device_code: `CAM${i}`,
+                            name: name || `Kamera ${i}`,
+                            stream_url: url,
+                            cafe_id: cafe_id
+                        })
+                    });
+                }
+
+                // 🔥 CLEANUP
+                localStorage.removeItem("tempCafe");
+
+                alert("Cafe dan kamera berhasil disimpan");
+                window.location.href = "select-cafe.html";
+
+            } catch (error) {
+                console.error(error);
+                alert("Terjadi error saat menyimpan data");
+            }
+        }
+    </script>
+</body>
+
+</html>
