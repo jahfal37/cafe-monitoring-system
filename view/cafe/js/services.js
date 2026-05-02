@@ -36,6 +36,49 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 5000);
 });
 
+// ============================
+// LOAD CAMERAS
+// ============================
+async function loadCameras(cafeId) {
+    const cafeId = localStorage.getItem("cafe_id");
+
+    const res = await fetch(`http://localhost:5000/api/devices?cafe_id=${cafeId}`);
+    const data = await res.json();
+
+    renderCameras(data);
+}
+
+// ============================
+// RENDER CAMERAS
+// ============================
+function renderCameras(cameras) {
+
+    const container = document.getElementById("cameraGrid");
+    container.innerHTML = "";
+
+    if (!cameras || cameras.length === 0) {
+        container.innerHTML = `
+            <p class="text-gray-500">Tidak ada kamera tersedia</p>
+        `;
+        return;
+    }
+
+    cameras.forEach((cam, index) => {
+        container.innerHTML += `
+        <div class="bg-white rounded-cafe shadow-cafe-card p-4">
+            <h3 class="font-bold text-cafe-dark mb-3">${cam.name}</h3>
+
+            <div class="relative w-full h-[400px] bg-black rounded-xl overflow-hidden">
+            <img src="${cam.stream_url}" class="w-full h-full object-cover" />
+
+            <div class="absolute top-2 left-2 bg-red-600 text-white text-xs px-3 py-1 rounded">
+                LIVE
+            </div>
+            </div>
+        </div>
+        `;
+    });
+}
 
 // ============================
 // LOAD DATA
