@@ -2,7 +2,7 @@
 // INIT
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
-
+    createDeviceSection();
     const token = localStorage.getItem("token");
     const cafeId = localStorage.getItem("cafe_id");
 

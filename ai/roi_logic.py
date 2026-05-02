@@ -5,6 +5,18 @@ from firebase_admin import credentials, firestore
 from datetime import datetime
 from mqtt_handler import MQTTHandler
 import requests
+import json 
+
+# =========================
+# CONFIG
+# =========================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(BASE_DIR, "config.json")
+
+with open(config_path) as f:
+    config = json.load(f)
+
+BASE_URL = config.get("base_url")
 
 # =========================
 # INIT FIREBASE
@@ -79,7 +91,7 @@ class ROIStateMachine:
     # BACKEND: KIRIM CUSTOMER
     # =========================
     def send_customer(self, person_id, duration):
-        url = "http://127.0.0.1:5000/api/tambah"
+        url = f"{BASE_URL}/api/tambah"
 
         data = {
             "cafe_id": self.cafe_id,
@@ -97,15 +109,17 @@ class ROIStateMachine:
     # BACKEND: KIRIM SERVICE
     # =========================
     def send_service(self, waiting_time):
-        url = "http://127.0.0.1:5000/api/services/ai"
+        url = f"{BASE_URL}/api/ai/services"
 
         data = {
             "cafe_id": self.cafe_id,
+            "device_code": self.device_code,  # 🔥 WAJIB
             "customer_code": f"T{self.roi_id}-{int(time.time())}",
             "table_number": f"T{self.roi_id}",
             "waiting_time": int(waiting_time),
             "tanggal": datetime.now().strftime("%Y-%m-%d")
         }
+
 
         try:
             res = requests.post(url, json=data)
@@ -124,7 +138,7 @@ class ROIStateMachine:
     # =========================
 
     def send_table_total(self, total):
-        url = "http://127.0.0.1:5000/api/update-meja"
+        url = f"{BASE_URL}/api/update-meja"
 
         data = {
             "cafe_id": self.cafe_id,

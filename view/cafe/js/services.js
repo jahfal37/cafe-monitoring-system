@@ -26,7 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
     dateInput.value = today;
 
     loadServices(today);
-
+    loadCameras();
+    
     dateInput.addEventListener("change", () => {
         loadServices(dateInput.value);
     });
@@ -36,7 +37,62 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 5000);
 });
 
+// ============================
+// LOAD CAMERAS
+// ============================
+function loadCameras() {
+    const token = localStorage.getItem("token");
 
+    fetch("http://127.0.0.1:5000/api/devices", {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        const container = document.getElementById("cameraContainer");
+        container.innerHTML = ""; // reset
+
+        if (!data.devices || data.devices.length === 0) {
+            container.innerHTML = `<p>Tidak ada device</p>`;
+            return;
+        }
+
+        data.devices.forEach(device => {
+
+            const camCount = device.camera_count || 1;
+
+            for (let i = 0; i < camCount; i++) {
+
+                const camHTML = `
+                    <div class="bg-white rounded-cafe shadow-cafe-card p-4">
+                        <h3 class="font-bold text-cafe-dark mb-3">
+                            ${device.device_code} - Kamera ${i + 1}
+                        </h3>
+
+                        <div class="relative w-full h-[400px] md:h-[550px] bg-black rounded-xl overflow-hidden">
+                            <img 
+                                src="http://127.0.0.1:5000/video_feed/${device.device_code}/${i}" 
+                                class="w-full h-full object-cover"
+                            />
+
+                            <div class="absolute top-2 left-2 bg-red-600 text-white text-xs px-3 py-1 rounded">
+                                LIVE
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML += camHTML;
+            }
+        });
+
+    })
+    .catch(err => {
+        console.error("ERROR LOAD CAMERAS:", err);
+    });
+}
 // ============================
 // LOAD DATA
 // ============================

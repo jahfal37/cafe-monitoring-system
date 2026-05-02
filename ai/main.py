@@ -15,6 +15,8 @@ from roi_logic import ROIStateMachine
 with open("config.json") as f:
     config = json.load(f)
 
+BASE_URL = config.get("base_url")
+
 # ambil cafe_id dulu
 cafe_id = os.getenv("CAFE_ID", config.get("cafe_id"))
 
@@ -35,6 +37,10 @@ if not raw_device.startswith(f"{cafe_id}_"):
 else:
     device_code = raw_device
 
+REGISTER_URL = f"{BASE_URL}/api/devices/register-ai"
+UPDATE_URL   = f"{BASE_URL}/api/devices/{device_code}"
+SERVICE_URL  = f"{BASE_URL}/api/ai/services"
+
 # =========================
 # DEBUG
 # =========================
@@ -47,7 +53,7 @@ print("[CONFIG] Final Device:", device_code)
 # DEVICE REGISTER
 # =========================
 def register_device():
-    url = "http://127.0.0.1:5000/api/devices/register-ai"
+    url = REGISTER_URL
 
     data = {
         "cafe_id": cafe_id,
@@ -55,7 +61,7 @@ def register_device():
     }
 
     try:
-        res = requests.post(url, json=data)
+        res = requests.post(REGISTER_URL, json=data)
         print("[REGISTER DEVICE]", res.status_code)
     except Exception as e:
         print("[ERROR REGISTER DEVICE]:", e)
@@ -77,12 +83,18 @@ def update_device_status():
     last_update_time = now
 
     try:
-        requests.put(
-            f"http://127.0.0.1:5000/api/devices/{device_code}",
-            json={"status": "active"}
+        res = requests.put(
+            UPDATE_URL,
+            json={
+                "status": "active",
+                "cafe_id": cafe_id
+            }
         )
+        print("[UPDATE DEVICE]", res.status_code, res.text)
+
     except Exception as e:
         print("[ERROR UPDATE DEVICE]:", e)
+
 
 
 # =========================

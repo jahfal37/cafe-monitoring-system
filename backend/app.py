@@ -19,6 +19,7 @@ from firebase_admin import credentials, firestore
 from ultralytics import YOLO
 import os
 import sys
+import pytz
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -65,6 +66,9 @@ hari_list = [
     "Jumat", "Sabtu", "Minggu"
 ]
 
+def now_wib():
+    tz = pytz.timezone("Asia/Jakarta")
+    return datetime.now(tz).isoformat()
 # =====================================================
 # ROOT
 # =====================================================
@@ -703,7 +707,7 @@ def add_device():
         "cafe_id": cafe_id,
         "device_code": data["device_code"],
         "status": "inactive",
-        "last_update": datetime.utcnow().isoformat()
+        "last_update": now_wib()
     })
 
     return jsonify({"message": "Device ditambahkan"})
@@ -799,7 +803,7 @@ def update_device(device_code):
         for doc in docs:
             doc.reference.update({
                 "status": status,
-                "last_update": datetime.utcnow().isoformat()
+                "last_update": now_wib()
             })
 
         return jsonify({
@@ -973,8 +977,6 @@ def update_meja():
 # =====================================================
 # REGISTER AI DEVICE
 # =====================================================
-
-
 @app.route("/api/devices/register-ai", methods=["POST"])
 def register_device_ai():
     data = request.json
@@ -997,7 +999,7 @@ def register_device_ai():
         "cafe_id": cafe_id,
         "device_code": device_code,
         "status": "inactive",
-        "last_update": datetime.utcnow().isoformat()
+        "last_update": now_wib()
     })
 
     return jsonify({"message": "Device berhasil didaftarkan"})
@@ -1005,39 +1007,86 @@ def register_device_ai():
 # =====================================================
 # AI SERVICE
 # =====================================================
-    @app.route("/api/ai/services", methods=["POST"])
-    def ai_add_service():
-        data = request.json
+@app.route("/api/ai/services", methods=["POST"])
+def ai_add_service():
+    data = request.json
 
-        required = [
-            "cafe_id",
-            "device_code",
-            "customer_code",
-            "table_number",
-            "waiting_time",
-            "tanggal"
-        ]
+    required = [
+        "cafe_id",
+        "device_code",
+        "customer_code",
+        "table_number",
+        "waiting_time",
+        "tanggal"
+    ]
 
-        if not all(k in data for k in required):
-            return jsonify({"error": "Field tidak lengkap"}), 400
+    if not all(k in data for k in required):
+        return jsonify({"error": "Field tidak lengkap"}), 400
 
-        status = "long" if int(data["waiting_time"]) >= 30 else "normal"
+    status = "long" if int(data["waiting_time"]) >= 30 else "normal"
 
-        db.collection("services").add({
-            "cafe_id": data["cafe_id"],
-            "device_code": data["device_code"],  # 🔥 penting
-            "customer_code": data["customer_code"],
-            "table_number": data["table_number"],
-            "waiting_time": int(data["waiting_time"]),
-            "status": status,
-            "tanggal": data["tanggal"]
-        })
+    db.collection("services").add({
+        "cafe_id": data["cafe_id"],
+        "device_code": data["device_code"],  # 🔥 penting
+        "customer_code": data["customer_code"],
+        "table_number": data["table_number"],
+        "waiting_time": int(data["waiting_time"]),
+        "status": status,
+        "tanggal": data["tanggal"]
+    })
 
-        return jsonify({"message": "Service dari AI masuk"})
+    return jsonify({"message": "Service dari AI masuk"})
+# =====================================================
+# AUTO OFFLINE CHECKER
+# =====================================================
+def auto_offline_checker():
+    tz = pytz.timezone("Asia/Jakarta")
+
+    while True:
+        try:
+            docs = db.collection("devices").stream()
+
+            for doc in docs:
+                data = doc.to_dict()
+
+                last_update = data.get("last_update")
+                status = data.get("status")
+                device_code = data.get("device_code")
+
+                if not last_update or status != "active":
+                    continue
+
+                try:
+                    # 🔥 parse waktu (sudah ada +07:00)
+                    last_time = datetime.fromisoformat(last_update)
+                except Exception as e:
+                    print("[PARSE ERROR]", last_update)
+                    continue
+
+                # 🔥 waktu sekarang WIB (timezone-aware)
+                now = datetime.now(tz)
+
+                delta = (now - last_time).total_seconds()
+
+                print(f"[CHECK] {device_code} | {delta:.2f}s")
+
+                # 🔥 kalau lebih dari 10 detik → inactive
+                if delta > 10:
+                    doc.reference.update({
+                        "status": "inactive"
+                    })
+                    print(f"[AUTO OFF] {device_code}")
+
+        except Exception as e:
+            print("ERROR AUTO OFF:", e)
+
+        time.sleep(5)
 
 
 # =====================================================
 # RUN APP
 # =====================================================
 if __name__ == "__main__":
+    import threading
+    threading.Thread(target=auto_offline_checker, daemon=True).start()
     app.run(debug=True)

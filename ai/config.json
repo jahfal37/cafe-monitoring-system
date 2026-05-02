@@ -1,4 +1,5 @@
 {
   "cafe_id": "jahfal",
-  "device_code": "CAM001"
+  "device_code": "CAM001",
+  "base_url": "https://plug-imply-overarch.ngrok-free.dev"
 }
