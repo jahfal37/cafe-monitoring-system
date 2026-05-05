@@ -12,10 +12,38 @@ from roi_logic import ROIStateMachine
 # =========================
 # CONFIG
 # =========================
+def get_ngrok_url():
+    try:
+        res = requests.get("http://127.0.0.1:4040/api/tunnels")
+        data = res.json()
+
+        for tunnel in data["tunnels"]:
+            if tunnel["proto"] == "https":
+                return tunnel["public_url"]
+
+    except Exception as e:
+        print("[NGROK ERROR]", e)
+
+    return None
+
+
+# =========================
+# LOAD CONFIG
+# =========================
 with open("config.json") as f:
     config = json.load(f)
 
-BASE_URL = config.get("base_url")
+# 🔥 PRIORITAS:
+# 1. NGROK
+# 2. ENV
+# 3. CONFIG
+BASE_URL = (
+    get_ngrok_url()
+    or os.getenv("BASE_URL")
+    or config.get("base_url")
+)
+
+print("[BASE_URL AKTIF]:", BASE_URL)
 
 # ambil cafe_id dulu
 cafe_id = os.getenv("CAFE_ID", config.get("cafe_id"))
@@ -53,16 +81,14 @@ print("[CONFIG] Final Device:", device_code)
 # DEVICE REGISTER
 # =========================
 def register_device():
-    url = REGISTER_URL
-
-    data = {
-        "cafe_id": cafe_id,
-        "device_code": device_code
-    }
-
     try:
-        res = requests.post(REGISTER_URL, json=data)
-        print("[REGISTER DEVICE]", res.status_code)
+        res = requests.post(REGISTER_URL, json={
+            "cafe_id": cafe_id,
+            "device_code": device_code
+        })
+
+        print("[REGISTER DEVICE]", res.status_code, res.text)
+
     except Exception as e:
         print("[ERROR REGISTER DEVICE]:", e)
 
@@ -70,7 +96,7 @@ def register_device():
 # =========================
 # DEVICE STATUS UPDATE (ANTI SPAM)
 # =========================
-last_update_time = 0
+last_update_time = time.time()   # biar tidak langsung spam update device
 
 def update_device_status():
     global last_update_time
@@ -165,7 +191,7 @@ roi_states = {roi.roi_id: "EMPTY" for roi in roi_manager.rois}
 register_device()
 
 prev_time = time.time()
-
+last_send = time.time()          # biar kirim frame tidak langsung nembak
 # =========================
 # MAIN LOOP
 # =========================
@@ -193,7 +219,36 @@ while True:
     )
 
     annotated_frame = results[0].plot()
-    frame_store.frame = annotated_frame
+
+    # =========================
+    # KIRIM FRAME KE SERVER
+    # =========================
+    now = time.time()
+
+    if now - last_send > 0.5:  # kirim tiap 0.5 detik
+        last_send = now
+
+        small_frame = cv2.resize(annotated_frame, (480, 320))
+
+        ret, buffer = cv2.imencode(
+            '.jpg',
+            small_frame,
+            [int(cv2.IMWRITE_JPEG_QUALITY), 50]
+        )
+
+        if ret:
+            try:
+                requests.post(
+                    f"{BASE_URL}/api/frame",
+                    files={"frame": ("frame.jpg", buffer.tobytes(), "image/jpeg")},
+                    data={"device_code": device_code},
+                    timeout=1
+                )
+                print("[SEND FRAME OK]")
+            except Exception as e:
+                print("[ERROR SEND FRAME]", e)
+
+    # lanjut normal
     boxes = results[0].boxes
 
     # =========================
@@ -302,7 +357,6 @@ while True:
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
-
 # =========================
 # CLEANUP
 # =========================

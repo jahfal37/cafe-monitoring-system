@@ -1,5 +1,5 @@
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 from datetime import date, datetime
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -20,6 +20,7 @@ from ultralytics import YOLO
 import os
 import sys
 import pytz
+import numpy as np
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -33,16 +34,21 @@ model_path = os.path.join(BASE_DIR, "../ai/model/best.pt")
 
 model = YOLO(model_path)
 
-
 # =====================================================
 # APP CONFIG
 # =====================================================
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"])
+CORS(app)
 
 app.config["JWT_SECRET_KEY"] = "super-secret-key-yang-panjang-minimal-32-karakter"
 
 jwt = JWTManager(app)
+
+@app.route("/api/config", methods=["GET"])
+def get_config():
+    return jsonify({
+        "base_url": config.get("base_url")
+    })
 
 # =====================================================
 # FIREBASE INIT
@@ -820,47 +826,28 @@ def update_device(device_code):
 # VIDEO STREAMING (AMBIL DARI frame_store)
 # =====================================================
 class CameraStream:
-    def __init__(self, src=0):
-        self.src = src
+    def __init__(self, device_code):
+        self.device_code = device_code
         self.frame = None
         self.lock = threading.Lock()
         self.running = True
 
-        thread = threading.Thread(target=self.update, daemon=True)
-        thread.start()
+        threading.Thread(target=self.update, daemon=True).start()
 
     def update(self):
         while self.running:
-            frame = frame_store.frame  # 🔥 ambil dari main.py
+            frame = frame_store.frames.get(self.device_code)
 
             if frame is None:
                 time.sleep(0.01)
                 continue
 
-            annotated_frame = frame.copy()
-
-            # label kamera (optional)
-            cv2.putText(
-                annotated_frame,
-                f"AI Camera {self.src}",
-                (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0),
-                2
-            )
-
             with self.lock:
-                self.frame = annotated_frame
-
-            time.sleep(0.03)
+                self.frame = frame.copy()
 
     def get_frame(self):
         with self.lock:
             return self.frame
-
-    def stop(self):
-        self.running = False
 
 
 # =========================
@@ -868,12 +855,10 @@ class CameraStream:
 # =========================
 cameras = {}
 
-
-def get_camera(index):
-    if index not in cameras:
-        print(f"[INFO] Membuat stream virtual {index}")
-        cameras[index] = CameraStream(index)
-    return cameras[index]
+def get_camera(device_code):
+    if device_code not in cameras:
+        cameras[device_code] = CameraStream(device_code)
+    return cameras[device_code]
 
 
 # =========================
@@ -904,23 +889,43 @@ def gen_frames(camera):
 # =========================
 # ROUTES
 # =========================
-@app.route('/video_feed_1')
-def video_feed_1():
-    cam = get_camera(0)
+@app.route('/video_feed/<device_code>/<int:cam_index>')
+def video_feed(device_code, cam_index):
+    cam = get_camera(device_code)
+
     return Response(
         gen_frames(cam),
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
 
+@app.route("/api/frame", methods=["POST"])
+def receive_frame():
+    device_code = request.form.get("device_code")
+    file = request.files.get("frame")
 
-@app.route('/video_feed_2')
-def video_feed_2():
-    cam = get_camera(1)
-    return Response(
-        gen_frames(cam),
-        mimetype='multipart/x-mixed-replace; boundary=frame'
-    )
+    if not device_code or not file:
+        print("❌ INVALID REQUEST")
+        return "Invalid", 400
 
+    frame_bytes = file.read()
+
+    print("📦 SIZE:", len(frame_bytes), "| DEVICE:", device_code)
+
+    # convert ke numpy
+    nparr = np.frombuffer(frame_bytes, np.uint8)
+    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    # 🔴 VALIDASI PENTING
+    if frame is None:
+        print("❌ DECODE GAGAL (frame None)")
+        return "Decode error", 400
+
+    print("✅ FRAME BERHASIL")
+
+    # simpan
+    frame_store.frames[device_code] = frame
+
+    return "OK"
 
 @app.route("/api/meja-summary", methods=["GET"])
 def meja_summary():
