@@ -1,7 +1,8 @@
 
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+import random
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import (
     JWTManager,
@@ -21,6 +22,8 @@ import os
 import sys
 import pytz
 import numpy as np
+import pandas as pd
+from prophet import Prophet
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -234,6 +237,79 @@ def dashboard_cafe():
         "data_harian": data
     })
 
+# =====================================================
+# PREDICTION CAFE
+# =====================================================
+@app.route("/api/cafe/prediction/<string:cafe_id>")
+def predict(cafe_id):
+    try:
+        # =========================
+        # 🔥 AMBIL DATA DARI FIRESTORE
+        # =========================
+        docs = db.collection("pelanggan") \
+            .where("cafe_id", "==", cafe_id) \
+            .stream()
+
+        data = []
+
+        for doc in docs:
+            item = doc.to_dict()
+
+            if not item.get("tanggal") or not item.get("jumlah"):
+                continue
+
+            data.append({
+                "ds": item["tanggal"],
+                "y": int(item["jumlah"])
+            })
+
+        df = pd.DataFrame(data)
+
+        print("DATA FIRESTORE:", df.head())
+        print("JUMLAH DATA:", len(df))
+
+        # =========================
+        # 🔥 HANDLE DATA KOSONG
+        # =========================
+        if len(df) < 10:
+            print("PAKAI DUMMY DATA")
+            df = pd.DataFrame({
+                "ds": pd.date_range(start="2024-01-01", periods=15),
+                "y": [10,12,11,15,14,18,20,22,19,21,23,25,24,26,28]
+            })
+
+        # =========================
+        # FORMAT WAJIB PROPHET
+        # =========================
+        df["ds"] = pd.to_datetime(df["ds"])
+        df = df.sort_values("ds")
+
+        # =========================
+        # TRAIN MODEL
+        # =========================
+        model = Prophet(daily_seasonality=True)
+        model.fit(df)
+
+        # =========================
+        # PREDICT BESOK
+        # =========================
+        future = model.make_future_dataframe(periods=1)
+        forecast = model.predict(future)
+
+        pred = forecast.tail(1)["yhat"].iloc[0]
+
+        print("HASIL PREDIKSI:", pred)
+
+        return jsonify({
+            "prediction": int(pred)
+        })
+
+    except Exception as e:
+        print("ERROR PREDICT:", e)
+        return jsonify({
+            "prediction": 0,
+            "error": str(e)
+        })
 # =====================================================
 # SELECT CAFE BAPENDA
 # =====================================================
@@ -488,41 +564,46 @@ def update_cafe(cafe_id):
 # =====================================================
 # DUMMY GENERATOR
 # =====================================================
-
-
-@app.route("/api/seed-pelanggan", methods=["POST"])
-def seed_pelanggan():
+@app.route("/api/seed-pelanggan-auto", methods=["POST"])
+def seed_pelanggan_auto():
     try:
         data = request.get_json()
 
         cafe_id = data.get("cafe_id")
-        records = data.get("records")
+        total_hari = data.get("total_hari", 30)  # default 30 hari
 
-        if not cafe_id or not records:
+        if not cafe_id:
             return jsonify({
-                "error": "cafe_id dan records wajib diisi"
+                "error": "cafe_id wajib diisi"
             }), 400
+
+        start_date = datetime.today() - timedelta(days=total_hari)
 
         inserted = 0
 
-        for item in records:
-            if not item.get("tanggal") or not item.get("jumlah"):
-                continue
+        for i in range(total_hari):
+            tanggal = (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
 
-            tanggal_obj = datetime.strptime(item["tanggal"], "%Y-%m-%d")
+            # 🔥 generate data random realistis
+            jumlah = random.randint(10, 50)
 
-            db.collection("pelanggan").add({
+            tanggal_obj = datetime.strptime(tanggal, "%Y-%m-%d")
+
+            # 🔥 gunakan ID unik biar tidak duplikat
+            doc_id = f"{cafe_id}_{tanggal}"
+
+            db.collection("pelanggan").document(doc_id).set({
                 "cafe_id": cafe_id,
-                "tanggal": item["tanggal"],
+                "tanggal": tanggal,
                 "bulan": tanggal_obj.month,
                 "tahun": tanggal_obj.year,
-                "jumlah": int(item["jumlah"])
+                "jumlah": jumlah
             })
 
             inserted += 1
 
         return jsonify({
-            "message": f"{inserted} data berhasil ditambahkan"
+            "message": f"{inserted} data dummy berhasil dibuat"
         }), 201
 
     except Exception as e:

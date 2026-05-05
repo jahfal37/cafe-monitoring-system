@@ -1,4 +1,5 @@
 let myChart;
+let filterInitialized = false;
 
 // ============================
 // INIT
@@ -18,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCafeDropdown();
     loadCafeInfo();
     loadDashboard();
+    loadPrediction
 
 });
 
@@ -28,7 +30,7 @@ async function loadCafeDropdown() {
     const select = document.getElementById("cafeSelect");
 
     try {
-        const res = await fetch("http://127.0.0.1:5000/api/bapenda/cafes", {
+        const res = await fetch(`${CONFIG.API_URL}/api/bapenda/cafes`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`
             }
@@ -36,7 +38,7 @@ async function loadCafeDropdown() {
 
         const cafes = await res.json();
 
-        select.innerHTML = `<option value="">Pilih Cafe</option>`;
+        select.innerHTML = `<option value="">-- Pilih Cafe --</option>`;
 
         cafes.forEach(cafe => {
             select.innerHTML += `
@@ -44,11 +46,8 @@ async function loadCafeDropdown() {
             `;
         });
 
-        // default dari halaman sebelumnya
         const selected = localStorage.getItem("selectedCafe");
-        if (selected) {
-            select.value = selected;
-        }
+        if (selected) select.value = selected;
 
         select.addEventListener("change", () => {
             localStorage.setItem("selectedCafe", select.value);
@@ -66,6 +65,9 @@ async function loadCafeDropdown() {
 // FILTER BULAN & TAHUN
 // ============================
 function initFilter() {
+    if (filterInitialized) return; // 🔥 cegah double
+    filterInitialized = true;
+
     const month = document.getElementById("monthSelect");
     const year = document.getElementById("yearSelect");
 
@@ -78,21 +80,22 @@ function initFilter() {
     ];
 
     bulan.forEach((b, i) => {
-        month.innerHTML += `<option value="${i+1}">${b}</option>`;
+        month.innerHTML += `<option value="${i + 1}">${b}</option>`;
     });
 
-    for (let y = 2024; y <= 2026; y++) {
+    const now = new Date().getFullYear();
+
+    for (let y = now - 2; y <= now + 1; y++) {
         year.innerHTML += `<option value="${y}">${y}</option>`;
     }
 
-    const now = new Date();
-    month.value = now.getMonth() + 1;
-    year.value = now.getFullYear();
+    const today = new Date();
+    month.value = today.getMonth() + 1;
+    year.value = today.getFullYear();
 
     month.addEventListener("change", loadDashboard);
     year.addEventListener("change", loadDashboard);
 }
-
 
 // ============================
 // LOAD DASHBOARD
@@ -108,9 +111,9 @@ async function loadDashboard() {
         return;
     }
 
-    try {
+     try {
         const res = await fetch(
-            `http://127.0.0.1:5000/api/bapenda/dashboard/${cafeId}?bulan=${bulan}&tahun=${tahun}`,
+            `${CONFIG.API_URL}/api/bapenda/dashboard/${cafeId}?bulan=${bulan}&tahun=${tahun}`,
             {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`
@@ -121,7 +124,7 @@ async function loadDashboard() {
         const data = await res.json();
 
         if (data.error) {
-            alert(data.error);
+            console.error(data.error);
             return;
         }
 
@@ -136,7 +139,7 @@ async function loadDashboard() {
         // =========================
         // TABLE
         // =========================
-        const tbody = document.querySelector("tbody");
+        const tbody = document.getElementById("tableBody");
         tbody.innerHTML = "";
 
         if (data.data_harian?.length > 0) {
@@ -246,4 +249,24 @@ async function loadCafeInfo() {
     } catch (err) {
         console.error("ERROR LOAD CAFE:", err);
     }
+}
+    // ============================
+    // LOAD INFO CAFE
+    // ============================
+    function loadPrediction() {
+        const cafeId = localStorage.getItem("cafe_id");
+
+        fetch(`${API_URL}/api/cafe/prediction/${cafeId}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const el = document.getElementById("prediksiBesok");
+            if (el) {
+                el.innerText = data.prediction || 0;
+            }
+        })
+        .catch(err => console.error("ERROR PREDIKSI:", err));
 }

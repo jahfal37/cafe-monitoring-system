@@ -86,7 +86,7 @@
                     <div class="text-right">
                         <!-- Ganti dengan data total pelanggan saat ini pada cafe terkait -->
                         <span id="totalSaatIni" class="text-4xl font-black text-cafe-dark">0</span>
-                        <p class="text-sm text-cafe-muted font-medium mt-1">Total pelanggan saat ini</p>
+                        <p class="text-sm text-cafe-muted font-medium mt-1">Total pelanggan bulan ini</p>
                     </div>
                 </div>
                 <div
@@ -152,7 +152,7 @@
                                 <th class="px-4 md:px-8 py-4">Jumlah Pelanggan</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody id="tableBody" class="divide-y divide-gray-100">
                             <!-- Isi dengan data jumlah pelanggan per hari pada cafe terkait -->
                         </tbody>
                     </table>
@@ -191,6 +191,7 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/config.js"></script>
     <script src="js/dashboard.js"></script>
    
 

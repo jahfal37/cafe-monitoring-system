@@ -105,42 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================
-  // DROPDOWN BULAN & TAHUN (SAFE)
-  // ============================
-  if (monthSelect && yearSelect) {
-    const tahunSekarang = new Date().getFullYear();
-    const bulanSekarang = new Date().getMonth() + 1;
-
-    const bulan = [
-      "Januari", "Februari", "Maret", "April",
-      "Mei", "Juni", "Juli", "Agustus",
-      "September", "Oktober", "November", "Desember"
-    ];
-
-    // Isi bulan
-    bulan.forEach((nama, index) => {
-      const option = document.createElement("option");
-      option.value = index + 1;
-      option.textContent = nama;
-
-      if (index + 1 === bulanSekarang) option.selected = true;
-
-      monthSelect.appendChild(option);
-    });
-
-    // Isi tahun
-    for (let i = tahunSekarang - 10; i <= tahunSekarang + 1; i++) {
-      const option = document.createElement("option");
-      option.value = i;
-      option.textContent = i;
-
-      if (i === tahunSekarang) option.selected = true;
-
-      yearSelect.appendChild(option);
-    }
-  }
-
-  // ============================
   // INIT ICON
   // ============================
   if (window.lucide) lucide.createIcons();

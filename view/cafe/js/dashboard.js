@@ -47,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCafeInfo();
     initFilter();
     loadDashboard();
+    loadPrediction();
 
     // 🔥 AUTO REFRESH (5 DETIK)
     intervalId = setInterval(loadDashboard, 5000);
@@ -227,6 +228,42 @@ function loadCafeInfo() {
 
     })
     .catch(err => console.error("ERROR CAFE:", err));
+}
+    // ============================
+    // LOAD PREDICTION
+    // ============================
+    function loadPrediction() {
+    const cafeId = localStorage.getItem("cafe_id");
+
+    fetch(`${CONFIG.API_URL}/api/cafe/prediction/${cafeId}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        const el = document.getElementById("prediksiBesok");
+
+        if (!el) return;
+
+        const prediksi = data.prediction || 0;
+        el.innerText = prediksi;
+
+        // reset warna dulu
+        el.classList.remove("text-green-600", "text-red-500");
+
+        // ambil rata-rata dari UI
+        const rata = parseInt(document.getElementById("rataRataBulan")?.innerText || 0);
+
+        if (prediksi > rata) {
+            el.classList.add("text-green-600");
+        } else {
+            el.classList.add("text-red-500");
+        }
+
+    })
+    .catch(err => console.error("ERROR PREDIKSI:", err));
 }
 
 // ============================
