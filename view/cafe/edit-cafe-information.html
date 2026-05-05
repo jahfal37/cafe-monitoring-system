@@ -1,115 +1,167 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Edit Informasi Cafe</title>
-    <link rel="stylesheet" href="../src/style.css">
+    <link rel="stylesheet" href="../src/style.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
-</head>
+  </head>
 
-<body class="min-h-screen bg-cafe-secondary font-sans">
-
+  <body class="min-h-screen bg-cafe-secondary font-sans">
     <!-- 🔹 NAVBAR -->
-    <nav class="bg-white border-b border-gray-100 px-6 py-4 flex items-center gap-4 shadow-sm">
-        <button id="btnBack" class="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer">
-            <i data-lucide="arrow-left" class="w-6 h-6 text-cafe-dark"></i>
-        </button>
+    <nav
+      class="bg-white border-b border-gray-100 px-6 py-4 flex items-center gap-4 shadow-sm"
+    >
+      <button
+        id="btnBack"
+        class="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+      >
+        <i data-lucide="arrow-left" class="w-6 h-6 text-cafe-dark"></i>
+      </button>
 
-        <div class="bg-cafe-primary p-2 rounded-lg text-white">
-            <i data-lucide="coffee" class="w-5 h-5"></i>
-        </div>
+      <div class="bg-cafe-primary p-2 rounded-lg text-white">
+        <i data-lucide="coffee" class="w-5 h-5"></i>
+      </div>
 
-        <span class="font-bold text-xl text-cafe-dark">Edit Informasi Cafe</span>
+      <span class="font-bold text-xl text-cafe-dark">Edit Informasi Cafe</span>
     </nav>
 
     <!-- 🔹 CONTENT -->
     <main class="max-w-4xl mx-auto p-6 md:p-12">
-        <div class="bg-white rounded-cafe shadow-cafe-card p-8 md:p-12 border border-white">
+      <div
+        class="bg-white rounded-cafe shadow-cafe-card p-8 md:p-12 border border-white"
+      >
+        <form id="editForm" class="space-y-8">
+          <div>
+            <label class="block text-sm font-bold text-cafe-dark mb-3"
+              >Nama cafe</label
+            >
+            <input
+              type="text"
+              id="name"
+              placeholder="Masukkan nama cafe yang baru"
+              class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl"
+            />
+          </div>
 
-            <form id="editForm" class="space-y-8">
+          <div>
+            <label class="block text-sm font-bold text-cafe-dark mb-3"
+              >Alamat</label
+            >
+            <textarea
+              id="address"
+              placeholder="Masukkan alamat cafe yang baru"
+              rows="4"
+              class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl resize-none"
+            ></textarea>
+          </div>
 
-                <div>
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Nama cafe</label>
-                    <input type="text" id="name"
-                        placeholder="Masukkan nama cafe yang baru"
-                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
-                </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-bold text-cafe-dark mb-3"
+                >Jam Buka</label
+              >
+              <input
+                type="time"
+                id="open_time"
+                class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl"
+              />
+            </div>
 
-                <div>
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Alamat</label>
-                    <textarea id="address"
-                        placeholder="Masukkan alamat cafe yang baru"
-                        rows="4"
-                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl resize-none"></textarea>
-                </div>
+            <div>
+              <label class="block text-sm font-bold text-cafe-dark mb-3"
+                >Jam Tutup</label
+              >
+              <input
+                type="time"
+                id="close_time"
+                class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl"
+              />
+            </div>
+          </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-bold text-cafe-dark mb-3">Jam Buka</label>
-                        <input type="time" id="open_time"
-                            class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
-                    </div>
+          <div>
+            <label class="block text-sm font-bold text-cafe-dark mb-3"
+              >Jumlah Meja</label
+            >
+            <input
+              type="number"
+              id="table_count"
+              placeholder="Masukkan jumlah meja yang baru"
+              class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl"
+            />
+          </div>
 
-                    <div>
-                        <label class="block text-sm font-bold text-cafe-dark mb-3">Jam Tutup</label>
-                        <input type="time" id="close_time"
-                            class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
-                    </div>
-                </div>
+          <div>
+            <label class="block text-sm font-bold text-cafe-dark mb-3">
+              Jumlah Kamera
+            </label>
 
-                <div>
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Jumlah Meja</label>
-                    <input type="number" id="table_count"
-                        placeholder="Masukkan jumlah meja yang baru"
-                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
-                </div>
+            <input
+              type="number"
+              id="camera_count"
+              placeholder="Otomatis dari device"
+              readonly
+              class="w-full px-5 py-4 bg-gray-100 border border-cafe-border rounded-xl cursor-not-allowed"
+            />
 
-                <div>
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Jumlah Kamera</label>
-                    <input type="number" id="camera_count"
-                        placeholder="Masukkan jumlah kamera yang baru"
-                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
-                </div>
+            <p class="text-xs text-gray-400 mt-2">
+              Jumlah kamera dihitung otomatis dari device yang terdaftar
+            </p>
+          </div>
 
-                <div>
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Username</label>
-                    <input type="text" id="username"
-                        placeholder="Masukkan username yang baru"
-                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
-                </div>
+          <div>
+            <label class="block text-sm font-bold text-cafe-dark mb-3"
+              >Username</label
+            >
+            <input
+              type="text"
+              id="username"
+              placeholder="Masukkan username yang baru"
+              class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl"
+            />
+          </div>
 
-                <div>
-                    <label class="block text-sm font-bold text-cafe-dark mb-3">Password</label>
-                    <input type="password" id="password"
-                        placeholder="Masukkan password yang baru"
-                        class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl">
-                </div>
+          <div>
+            <label class="block text-sm font-bold text-cafe-dark mb-3"
+              >Password</label
+            >
+            <input
+              type="password"
+              id="password"
+              placeholder="Masukkan password yang baru"
+              class="w-full px-5 py-4 bg-white border border-cafe-border rounded-xl"
+            />
+          </div>
 
-                <div class="flex flex-col md:flex-row gap-4 pt-6">
-                    <button type="button" id="btnCancel"
-                        class="flex-1 bg-white border-2 border-cafe-border py-4 rounded-xl">
-                        Batal
-                    </button>
+          <div class="flex flex-col md:flex-row gap-4 pt-6">
+            <button
+              type="button"
+              id="btnCancel"
+              class="flex-1 bg-white border-2 border-cafe-border py-4 rounded-xl"
+            >
+              Batal
+            </button>
 
-                    <button type="submit"
-                        class="flex-1 bg-cafe-primary text-white py-4 rounded-xl">
-                        Update
-                    </button>
-                </div>
-
-            </form>
-
-        </div>
+            <button
+              type="submit"
+              class="flex-1 bg-cafe-primary text-white py-4 rounded-xl"
+            >
+              Update
+            </button>
+          </div>
+        </form>
+      </div>
     </main>
 
     <!-- 🔹 ICON INIT -->
     <script>
-        lucide.createIcons();
+      lucide.createIcons();
     </script>
 
     <!-- 🔥 SCRIPT UTAMA (PINDAH KE JS) -->
-<script src="js/edit-cafe-information.js"></script>
-
-</body>
+    <script src="js/config.js"></script>
+    <script src="js/edit-cafe-information.js"></script>
+  </body>
 </html>

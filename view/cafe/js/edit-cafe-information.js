@@ -2,7 +2,7 @@
 // INIT
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
-    createDeviceSection();
+
     const token = localStorage.getItem("token");
     const cafeId = localStorage.getItem("cafe_id");
 
@@ -32,7 +32,7 @@ function loadData(cafeId) {
 
     console.log("CAFE ID:", cafeId);
 
-    fetch(`http://127.0.0.1:5000/api/cafes/${cafeId}`, {
+    fetch(`${CONFIG.API_URL}/api/cafes/${cafeId}`, {
         headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`
         }
@@ -77,12 +77,11 @@ function updateData(e, cafeId) {
         open_time: document.getElementById("open_time").value,
         close_time: document.getElementById("close_time").value,
         table_count: document.getElementById("table_count").value,
-        camera_count: document.getElementById("camera_count").value,
         username: document.getElementById("username").value,
         password: document.getElementById("password").value
     };
 
-    fetch(`http://127.0.0.1:5000/api/cafes/${cafeId}`, {
+    fetch(`${CONFIG.API_URL}/api/cafes/${cafeId}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -110,5 +109,30 @@ function updateData(e, cafeId) {
     .catch(err => {
         console.error("ERROR UPDATE:", err);
         alert("Gagal update data");
-    });
+    });  
 }
+
+function loadCameraCount() {
+    fetch(`${CONFIG.API_URL}/api/devices`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            if (!data.devices) return;
+
+            let totalCamera = 0;
+
+            data.devices.forEach(device => {
+                totalCamera += device.camera_count || 1;
+            });
+
+            document.getElementById("camera_count").value = totalCamera;
+
+        })
+        .catch(err => {
+            console.error("ERROR LOAD CAMERA COUNT:", err);
+        });
+    }    
