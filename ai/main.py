@@ -66,8 +66,8 @@ else:
     device_code = raw_device
 
 REGISTER_URL = f"{BASE_URL}/api/devices/register-ai"
-UPDATE_URL   = f"{BASE_URL}/api/devices/{device_code}"
-SERVICE_URL  = f"{BASE_URL}/api/ai/services"
+UPDATE_URL = f"{BASE_URL}/api/devices/{device_code}"
+SERVICE_URL = f"{BASE_URL}/api/ai/services"
 
 # =========================
 # DEBUG
@@ -75,7 +75,6 @@ SERVICE_URL  = f"{BASE_URL}/api/ai/services"
 print("[CONFIG] Cafe ID:", cafe_id)
 print("[CONFIG] Raw Device:", raw_device)
 print("[CONFIG] Final Device:", device_code)
-
 
 # =========================
 # DEVICE REGISTER
@@ -96,7 +95,7 @@ def register_device():
 # =========================
 # DEVICE STATUS UPDATE (ANTI SPAM)
 # =========================
-last_update_time = time.time()   # biar tidak langsung spam update device
+last_update_time = time.time()
 
 def update_device_status():
     global last_update_time
@@ -116,11 +115,11 @@ def update_device_status():
                 "cafe_id": cafe_id
             }
         )
+
         print("[UPDATE DEVICE]", res.status_code, res.text)
 
     except Exception as e:
         print("[ERROR UPDATE DEVICE]:", e)
-
 
 
 # =========================
@@ -182,8 +181,10 @@ roi_logic = {
     for roi in roi_manager.rois
 }
 
-
-roi_states = {roi.roi_id: "EMPTY" for roi in roi_manager.rois}
+roi_states = {
+    roi.roi_id: "EMPTY"
+    for roi in roi_manager.rois
+}
 
 # =========================
 # START
@@ -191,12 +192,15 @@ roi_states = {roi.roi_id: "EMPTY" for roi in roi_manager.rois}
 register_device()
 
 prev_time = time.time()
-last_send = time.time()          # biar kirim frame tidak langsung nembak
+last_send = time.time()
+
 # =========================
 # MAIN LOOP
 # =========================
 while True:
+
     ret, frame = cap.read()
+
     if not ret:
         print("Failed to grab frame")
         break
@@ -220,68 +224,57 @@ while True:
 
     annotated_frame = results[0].plot()
 
-    # =========================
-    # KIRIM FRAME KE SERVER
-    # =========================
-    now = time.time()
-
-    if now - last_send > 0.5:  # kirim tiap 0.5 detik
-        last_send = now
-
-        small_frame = cv2.resize(annotated_frame, (480, 320))
-
-        ret, buffer = cv2.imencode(
-            '.jpg',
-            small_frame,
-            [int(cv2.IMWRITE_JPEG_QUALITY), 50]
-        )
-
-        if ret:
-            try:
-                requests.post(
-                    f"{BASE_URL}/api/frame",
-                    files={"frame": ("frame.jpg", buffer.tobytes(), "image/jpeg")},
-                    data={"device_code": device_code},
-                    timeout=1
-                )
-                print("[SEND FRAME OK]")
-            except Exception as e:
-                print("[ERROR SEND FRAME]", e)
-
-    # lanjut normal
     boxes = results[0].boxes
 
     # =========================
     # TRACK PERSON
     # =========================
     tracked_persons_per_roi = {
-        roi.roi_id: [] for roi in roi_manager.rois
+        roi.roi_id: []
+        for roi in roi_manager.rois
     }
 
+    # =========================
+    # COUNT OBJECT
+    # =========================
     if boxes is not None and len(boxes) > 0:
 
         roi_results = roi_manager.count_objects(
-            boxes, boxes.cls, food_class_id, person_class_id
+            boxes,
+            boxes.cls,
+            food_class_id,
+            person_class_id
         )
 
         for box in boxes:
+
             cls = int(box.cls[0])
 
             if cls == person_class_id and box.id is not None:
+
                 track_id = int(box.id[0])
 
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
+
                 cx = int((x1 + x2) / 2)
                 cy = int((y1 + y2) / 2)
 
                 for roi in roi_manager.rois:
+
                     if roi.contains(cx, cy):
-                        tracked_persons_per_roi[roi.roi_id].append(
-                            {"id": track_id}
-                        )
+
+                        tracked_persons_per_roi[roi.roi_id].append({
+                            "id": track_id,
+                            "pos": (cx, cy)
+                        })
+
     else:
+
         roi_results = {
-            roi.roi_id: {"person": 0, "food": 0}
+            roi.roi_id: {
+                "person": 0,
+                "food": 0
+            }
             for roi in roi_manager.rois
         }
 
@@ -289,28 +282,41 @@ while True:
     # UPDATE STATE
     # =========================
     roi_timers = {}
+    roi_stay_timers = {}
 
     for roi_id, data in roi_results.items():
 
         food = data["food"]
+
         tracked_persons = tracked_persons_per_roi[roi_id]
 
-        state, waiting_time = roi_logic[roi_id].update(
-            tracked_persons, food
+        state, waiting_time, waiting_time = roi_logic[roi_id].update(
+            tracked_persons,
+            food
         )
 
         roi_states[roi_id] = state
         roi_timers[roi_id] = waiting_time
+        roi_stay_timers[roi_id] = stay_time
 
         print(
-            f"[T{roi_id}] P:{len(tracked_persons)} F:{food} | {state} | {waiting_time}s"
+            f"[T{roi_id}] "
+            f"P:{len(tracked_persons)} "
+            f"F:{food} | "
+            f"{state} | "
+            f"WAIT:{waiting_time}s | "
+            f"STAY:{stay_time}s"
         )
 
     # =========================
     # DRAW ROI
     # =========================
     roi_manager.draw_all_with_status(
-        annotated_frame, roi_results, roi_states, roi_timers
+        annotated_frame,
+        roi_results,
+        roi_states,
+        roi_timers,
+        roi_stay_timers
     )
 
     # =========================
@@ -319,6 +325,7 @@ while True:
     y_offset = 60
 
     for roi in roi_manager.rois:
+
         total = roi_logic[roi.roi_id].total_customers
 
         cv2.putText(
@@ -337,7 +344,9 @@ while True:
     # FPS
     # =========================
     now = time.time()
+
     fps = 1 / (now - prev_time)
+
     prev_time = now
 
     cv2.putText(
@@ -351,14 +360,62 @@ while True:
     )
 
     # =========================
+    # KIRIM FRAME KE SERVER
+    # =========================
+    now = time.time()
+
+    if now - last_send > 0.5:
+
+        last_send = now
+
+        # 🔥 pakai ukuran asli agar ROI presisi
+        small_frame = annotated_frame
+
+        ret, buffer = cv2.imencode(
+            ".jpg",
+            small_frame,
+            [int(cv2.IMWRITE_JPEG_QUALITY), 50]
+        )
+
+        if ret:
+
+            try:
+
+                requests.post(
+                    f"{BASE_URL}/api/frame",
+                    files={
+                        "frame": (
+                            "frame.jpg",
+                            buffer.tobytes(),
+                            "image/jpeg"
+                        )
+                    },
+                    data={
+                        "device_code": device_code
+                    },
+                    timeout=1
+                )
+
+                print("[SEND FRAME OK]")
+
+            except Exception as e:
+
+                print("[ERROR SEND FRAME]", e)
+
+    # =========================
     # SHOW
     # =========================
-    cv2.imshow("Cafe Monitoring System", annotated_frame)
+    cv2.imshow(
+        "Cafe Monitoring System",
+        annotated_frame
+    )
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
+
 # =========================
 # CLEANUP
 # =========================
 cap.release()
+
 cv2.destroyAllWindows()

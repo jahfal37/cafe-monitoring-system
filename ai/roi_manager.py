@@ -24,7 +24,14 @@ class ROIManager:
     def add_roi(self, roi):
         self.rois.append(roi)
 
-    def draw_all_with_status(self, frame, roi_results, roi_states, roi_timers=None):
+    def draw_all_with_status(
+        self,
+        frame,
+        roi_results,
+        roi_states,
+        roi_timers=None,
+        roi_stay_timers=None
+    ):
 
         for roi in self.rois:
             # =========================
@@ -48,28 +55,50 @@ class ROIManager:
             # TIMER FORMAT
             # =========================
             time_str = "--:--"
+            stay_str = "--:--"
 
             if roi_timers and roi.roi_id in roi_timers:
                 timer = roi_timers[roi.roi_id]
                 minutes = timer // 60
                 seconds = timer % 60
                 time_str = f"{minutes:02d}:{seconds:02d}"
+            
+            if roi_stay_timers and roi.roi_id in roi_stay_timers:
+                stay_timer = roi_stay_timers[roi.roi_id]
+
+                stay_minutes = stay_timer // 60
+                stay_seconds = stay_timer % 60
+
+                stay_str = f"{stay_minutes:02d}:{stay_seconds:02d}"
 
             # hanya tampilkan saat WAITING
             if state == "EMPTY":
                 time_str = "--:--"
+                stay_str = "--:--"
 
             # =========================
-            # TEXT POSITION
+            # GLOBAL TEXT POSITION
             # =========================
-            left_x = int(np.min(roi.points[:, 0]))
-            top_y = int(np.min(roi.points[:, 1])) - 10
-            top_y = max(top_y, 20)
+            left_x = 10
 
-            text = f"T{roi.roi_id} | P:{person} F:{food} | {state} | {time_str}"
+            top_y = 30 + ((roi.roi_id - 1) * 30)
+
+            text = (
+                f"T{roi.roi_id} | "
+                f"P:{person} F:{food} | "
+                f"{state} | "
+                f"W:{time_str} | "
+                f"S:{stay_str}"
+            )
 
             if state == "SERVED":
-                text = f"T{roi.roi_id} | P:{max_person} F:{max_food} | {state} | {time_str}"
+                text = (
+                    f"T{roi.roi_id} | "
+                    f"P:{max_person} F:{max_food} | "
+                    f"{state} | "
+                    f"W:{time_str} | "
+                    f"S:{stay_str}"
+                )
             # =========================
             # BACKGROUND
             # =========================
@@ -77,8 +106,8 @@ class ROIManager:
 
             cv2.rectangle(
                 frame,
-                (left_x, top_y - h - 5),
-                (left_x + w, top_y),
+                (left_x - 5, top_y - h - 5),
+                (left_x + w + 5, top_y + 5),
                 (0, 0, 0),
                 -1
             )
@@ -101,9 +130,9 @@ class ROIManager:
             cv2.putText(
                 frame,
                 text,
-                (left_x, top_y - 2),
+                (left_x, top_y),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
+                0.5,
                 color,
                 2
             )

@@ -90,7 +90,7 @@ function loadCameras() {
                             ${device.device_code} - Kamera ${i + 1}
                         </h3>
 
-                        <div class="relative w-full h-[400px] md:h-[550px] bg-black rounded-xl overflow-hidden">
+                        <div class="relative w-full max-w-[640px] aspect-square bg-black rounded-xl overflow-hidden mx-auto" bg-black rounded-xl overflow-hidden">
                             <img src="${CONFIG.STREAM_URL}/video_feed/${device.device_code}/${i}"
                                  class="w-full h-full object-cover" />
 

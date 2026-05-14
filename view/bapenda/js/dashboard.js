@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCafeDropdown();
     loadCafeInfo();
     loadDashboard();
-    loadPrediction
 
 });
 
@@ -250,23 +249,4 @@ async function loadCafeInfo() {
         console.error("ERROR LOAD CAFE:", err);
     }
 }
-    // ============================
-    // LOAD INFO CAFE
-    // ============================
-    function loadPrediction() {
-        const cafeId = localStorage.getItem("cafe_id");
-
-        fetch(`${API_URL}/api/cafe/prediction/${cafeId}`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            const el = document.getElementById("prediksiBesok");
-            if (el) {
-                el.innerText = data.prediction || 0;
-            }
-        })
-        .catch(err => console.error("ERROR PREDIKSI:", err));
-}
+    

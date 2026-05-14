@@ -94,45 +94,60 @@ def home():
 
 @app.route("/api/login", methods=["POST"])
 def login():
-    data = request.get_json()
 
-    if not data or "username" not in data or "password" not in data:
-        return jsonify({"error": "Data tidak lengkap"}), 400
+    try:
 
-    username = data["username"]
-    password = data["password"]
+        data = request.get_json()
 
-    # 🔥 cari berdasarkan username
-    docs = db.collection("cafes")\
-        .where("username", "==", username)\
-        .limit(1)\
-        .stream()
+        username = data["username"]
+        password = data["password"]
 
-    doc = next(docs, None)
+        docs = db.collection("cafes")\
+            .where("username", "==", username)\
+            .limit(1)\
+            .get()
 
-    # ❗ kalau user tidak ada ATAU password salah → sama saja
-    if not doc:
-        return jsonify({"error": "Username atau password salah"}), 401
+        doc = docs[0] if docs else None
 
-    cafe = doc.to_dict()
+        if not doc:
+            return jsonify({
+                "error": "Username atau password salah"
+            }), 401
 
-    if not check_password_hash(cafe.get("password"), password):
-        return jsonify({"error": "Username atau password salah"}), 401
+        cafe = doc.to_dict()
 
-    access_token = create_access_token(
-        identity=doc.id,
-        additional_claims={"role": cafe.get("role")}
-    )
+        if not check_password_hash(
+            cafe.get("password"),
+            password
+        ):
+            return jsonify({
+                "error": "Username atau password salah"
+            }), 401
 
-    return jsonify({
-        "access_token": access_token,
-        "user": {
-            "id": doc.id,
-            "username": cafe.get("username"),
-            "name": cafe.get("name"),
-            "role": cafe.get("role")
-        }
-    })
+        access_token = create_access_token(
+            identity=doc.id,
+            additional_claims={
+                "role": cafe.get("role")
+            }
+        )
+
+        return jsonify({
+            "access_token": access_token,
+            "user": {
+                "id": doc.id,
+                "username": cafe.get("username"),
+                "name": cafe.get("name"),
+                "role": cafe.get("role")
+            }
+        })
+
+    except Exception as e:
+
+        print("LOGIN ERROR:", e)
+
+        return jsonify({
+            "error": "Firestore quota habis sementara"
+        }), 500
 
 # =====================================================
 # TAMBAH DATA PELANGGAN
@@ -1126,47 +1141,76 @@ def ai_add_service():
 # AUTO OFFLINE CHECKER
 # =====================================================
 def auto_offline_checker():
+
     tz = pytz.timezone("Asia/Jakarta")
 
     while True:
+
         try:
-            docs = db.collection("devices").stream()
+
+            # 🔥 pakai get() bukan stream()
+            docs = db.collection("devices").get()
+
+            print(f"[AUTO CHECK] total devices: {len(docs)}")
 
             for doc in docs:
+
                 data = doc.to_dict()
 
                 last_update = data.get("last_update")
                 status = data.get("status")
                 device_code = data.get("device_code")
 
-                if not last_update or status != "active":
+                # skip kalau bukan active
+                if status != "active":
+                    continue
+
+                # skip kalau tidak ada waktu
+                if not last_update:
                     continue
 
                 try:
-                    # 🔥 parse waktu (sudah ada +07:00)
-                    last_time = datetime.fromisoformat(last_update)
+
+                    last_time = datetime.fromisoformat(
+                        last_update
+                    )
+
                 except Exception as e:
-                    print("[PARSE ERROR]", last_update)
+
+                    print("[PARSE ERROR]", e)
                     continue
 
-                # 🔥 waktu sekarang WIB (timezone-aware)
                 now = datetime.now(tz)
 
-                delta = (now - last_time).total_seconds()
+                delta = (
+                    now - last_time
+                ).total_seconds()
 
-                print(f"[CHECK] {device_code} | {delta:.2f}s")
+                print(
+                    f"[CHECK] {device_code} | "
+                    f"{delta:.1f}s"
+                )
 
-                # 🔥 kalau lebih dari 10 detik → inactive
-                if delta > 10:
+                # 🔥 OFFLINE kalau > 20 detik
+                if delta > 20:
+
                     doc.reference.update({
                         "status": "inactive"
                     })
-                    print(f"[AUTO OFF] {device_code}")
+
+                    print(
+                        f"[AUTO OFF] {device_code}"
+                    )
 
         except Exception as e:
-            print("ERROR AUTO OFF:", e)
 
-        time.sleep(5)
+            print(
+                "ERROR AUTO OFF:",
+                e
+            )
+
+        # 🔥 DELAY BESAR
+        time.sleep(30)
 
 
 # =====================================================
@@ -1175,4 +1219,4 @@ def auto_offline_checker():
 if __name__ == "__main__":
     import threading
     threading.Thread(target=auto_offline_checker, daemon=True).start()
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
