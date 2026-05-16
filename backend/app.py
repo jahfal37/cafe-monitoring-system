@@ -17,7 +17,6 @@ import cv2
 from flask import Response
 import firebase_admin
 from firebase_admin import credentials, firestore
-from ultralytics import YOLO
 import os
 import sys
 import pytz
@@ -31,11 +30,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AI_PATH = os.path.join(BASE_DIR, "../ai")
 sys.path.append(AI_PATH)
 import frame_store
-
+LOCAL_FRAMES = {} 
 # path model
-model_path = os.path.join(BASE_DIR, "../ai/model/best.pt")
+# model_path = os.path.join(BASE_DIR, "../ai/model/best.pt")
 
-model = YOLO(model_path)
+# model = YOLO(model_path)
 
 # =====================================================
 # APP CONFIG
@@ -932,14 +931,14 @@ class CameraStream:
 
     def update(self):
         while self.running:
-            frame = frame_store.frames.get(self.device_code)
+            frame = LOCAL_FRAMES.get(self.device_code)
 
             if frame is None:
                 time.sleep(0.01)
                 continue
 
             with self.lock:
-                self.frame = frame.copy()
+                self.frame = frame
 
     def get_frame(self):
         with self.lock:
@@ -961,6 +960,9 @@ def get_camera(device_code):
 # FRAME GENERATOR
 # =========================
 def gen_frames(camera):
+    target_fps = 15
+    frame_delay = 1 / target_fps
+
     while True:
         frame = camera.get_frame()
 
@@ -971,7 +973,7 @@ def gen_frames(camera):
         ret, buffer = cv2.imencode(
             '.jpg',
             frame,
-            [int(cv2.IMWRITE_JPEG_QUALITY), 70]
+            [int(cv2.IMWRITE_JPEG_QUALITY), 50]
         )
 
         if not ret:
@@ -980,48 +982,106 @@ def gen_frames(camera):
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' +
                buffer.tobytes() + b'\r\n')
-
+        time.sleep(frame_delay)
 
 # =========================
 # ROUTES
 # =========================
 @app.route('/video_feed/<device_code>/<int:cam_index>')
 def video_feed(device_code, cam_index):
-    cam = get_camera(device_code)
+    stream_key = f"{device_code}_{cam_index}"
+    cam = get_camera(stream_key)
 
     return Response(
         gen_frames(cam),
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
 
+# =====================================================
+# RECEIVE FRAME (LOCAL STREAM)
+# =====================================================
 @app.route("/api/frame", methods=["POST"])
 def receive_frame():
-    device_code = request.form.get("device_code")
-    file = request.files.get("frame")
 
-    if not device_code or not file:
-        print("❌ INVALID REQUEST")
-        return "Invalid", 400
+    try:
+        device_code = request.form.get("device_code")
+        cam_index = request.form.get("cam_index", "0")
 
-    frame_bytes = file.read()
+        file = request.files.get("frame")
 
-    print("📦 SIZE:", len(frame_bytes), "| DEVICE:", device_code)
+        if not device_code or not file:
+            print("❌ INVALID REQUEST")
+            return jsonify({
+                "error": "device_code/frame kosong"
+            }), 400
 
-    # convert ke numpy
-    nparr = np.frombuffer(frame_bytes, np.uint8)
-    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        # =========================
+        # READ IMAGE
+        # =========================
+        frame_bytes = file.read()
 
-    # 🔴 VALIDASI PENTING
-    if frame is None:
-        print("❌ DECODE GAGAL (frame None)")
-        return "Decode error", 400
+        nparr = np.frombuffer(
+            frame_bytes,
+            np.uint8
+        )
 
-    print("✅ FRAME BERHASIL")
+        frame = cv2.imdecode(
+            nparr,
+            cv2.IMREAD_COLOR
+        )
 
-    # simpan
-    frame_store.frames[device_code] = frame
+        if frame is None:
+            print("❌ FRAME NONE")
+            return jsonify({
+                "error": "decode gagal"
+            }), 400
 
-    return "OK"
+        # =========================
+        # RESIZE (OPTIMASI STREAM)
+        # =========================
+        frame = cv2.resize(
+            frame,
+            (640, 480)
+        )
+
+        # =========================
+        # KEY MULTI CAMERA
+        # contoh:
+        # RASPI01_0
+        # RASPI01_1
+        # =========================
+        stream_key = f"{device_code}_{cam_index}"
+
+        # =========================
+        # SAVE TO RAM
+        # =========================
+        frame_store.frames[stream_key] = frame
+
+        # =========================
+        # DEBUG LOCAL DISPLAY
+        # HAPUS NANTI JIKA SUDAH FIX
+        # =========================
+    #     cv2.imshow(
+    #         f"DEBUG {stream_key}",
+    #         frame
+    #     )
+
+    #     cv2.waitKey(1)
+
+    #     print(f"✅ FRAME OK: {stream_key}")
+
+    #     return jsonify({
+    #         "message": "frame diterima",
+    #         "stream_key": stream_key
+    #     })
+
+    # except Exception as e:
+
+    #     print("❌ ERROR FRAME:", str(e))
+
+    #     return jsonify({
+    #         "error": str(e)
+    #     }), 500
 
 @app.route("/api/meja-summary", methods=["GET"])
 def meja_summary():
@@ -1212,11 +1272,50 @@ def auto_offline_checker():
         # 🔥 DELAY BESAR
         time.sleep(30)
 
+# ====================================
+# CLEAN OLD FRAMES
+# ====================================
+last_frame_time = {}
 
+def frame_cleaner():
+
+    while True:
+
+        try:
+
+            now = time.time()
+
+            remove_keys = []
+
+            for key in LOCAL_FRAMES.keys():
+
+                last = last_frame_time.get(key, now)
+
+                if now - last > 30:
+                    remove_keys.append(key)
+
+            for key in remove_keys:
+
+                LOCAL_FRAMES.pop(key, None)
+
+                print("[FRAME REMOVED]", key)
+
+        except Exception as e:
+
+            print("CLEANER ERROR:", e)
+
+        time.sleep(10)
 # =====================================================
 # RUN APP
 # =====================================================
 if __name__ == "__main__":
     import threading
     threading.Thread(target=auto_offline_checker, daemon=True).start()
-    app.run(debug=True, use_reloader=False)
+    threading.Thread(target=frame_cleaner, daemon=True).start()
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=False,
+        threaded=True,
+        use_reloader=False
+    )
