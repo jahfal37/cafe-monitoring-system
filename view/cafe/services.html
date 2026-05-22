@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="../src/style.css" />
   <script type="module" src="../src/main.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="./js/config.js"></script>
+  <script src="./js/services.js"></script>
 </head>
 
 <body class="bg-cafe-secondary min-h-screen flex font-sans">
@@ -77,13 +79,15 @@
       </p>
 
       <!-- VIDEO STREAMING -->
-      <div id="cameraGrid" class="flex flex-col gap-6 mb-8"></div>
+      <div id="cameraContainer" class="flex flex-col gap-6 mb-8"></div>
 
       <div class="flex items-center gap-4 mb-8">
         <span class="font-bold text-cafe-dark">Pilih tanggal:</span>
         <input type="date"
           class="px-4 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cafe-primary/20" />
       </div>
+      </div>
+
 
       <!-- CARD -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -91,19 +95,19 @@
           <p class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider">
             Rata - rata Waktu Tunggu
           </p>
-          <span class="text-4xl font-black text-cafe-dark">24 Menit</span>
+          <span class="text-4xl font-black text-cafe-dark">0 Menit</span>
         </div>
         <div class="bg-white p-10 rounded-cafe shadow-cafe-card border border-white text-center">
           <p class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider">
             Waktu Tunggu Terlama
           </p>
-          <span class="text-4xl font-black text-cafe-dark">40 Menit</span>
+          <span class="text-4xl font-black text-cafe-dark">0 Menit</span>
         </div>
         <div class="bg-white p-10 rounded-cafe shadow-cafe-card border border-white text-center">
           <p class="text-xs text-cafe-muted font-medium mb-4 uppercase tracking-wider">
             Jumlah Kasus Long Wait
           </p>
-          <span class="text-4xl font-black text-cafe-dark">5 Kasus</span>
+          <span class="text-4xl font-black text-cafe-dark">0 Kasus</span>
         </div>
       </div>
 
@@ -118,6 +122,8 @@
               <tr>
                 <th class="px-6 py-4">No. Pelanggan</th>
                 <th class="px-6 py-4">No. Meja</th>
+                <th class="px-6 py-4">Jumlah Pelanggan</th>
+                <th class="px-6 py-4">Jam</th>
                 <th class="px-6 py-4">Waktu Tunggu</th>
                 <th class="px-6 py-4 text-center">Status</th>
               </tr>
@@ -167,7 +173,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 
-<script src="/view/cafe/js/services.js"></script>
 <script src="/view/src/logout.js"></script>
 
 </html>
