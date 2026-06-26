@@ -22,7 +22,7 @@ BASE_URL = config.get("base_url")
 # INIT FIREBASE
 # =========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-cred_path = os.path.join(BASE_DIR, "../backend/serviceAccountKey.json")
+cred_path = os.path.join(BASE_DIR, "serviceAccountKey.json")
 
 if not firebase_admin._apps:
     cred = credentials.Certificate(cred_path)
@@ -48,6 +48,7 @@ class ROIStateMachine:
         self.waiting_time = 0
         self.stay_time = 0
         self.sent = False
+        self.service_sent = False
 
         # MQTT
         self.mqtt = MQTTHandler()
@@ -60,7 +61,8 @@ class ROIStateMachine:
         # CONFIG
         # =========================
         self.EMPTY_TIMEOUT = 60             # Meja kosong selama 1 menit agar reset kembali
-        self.FOOD_STABLE_FRAMES = 15        # Makanan Stabil Terdeteksi
+        self.FOOD_STABLE_DURATION = 5  # Makanan harus menetap selama 5 detik (bisa kamu naikkan sesuai kebutuhan)
+        self.food_start_time = None    # Menandai kapan makanan mulai terdeteksi      # Makanan Stabil Terdeteksi
         self.ALERT_THRESHOLD = 900          # Buzzer
         self.MIN_WAIT_TIME = 5
 
@@ -71,7 +73,7 @@ class ROIStateMachine:
 
         self.total_customers = 0
 
-        self.CUSTOMER_VALID_TIME = 300       # Customer agar valid sebagai pelanggan 5 Menit
+        self.CUSTOMER_VALID_TIME = 10     # Customer agar valid sebagai pelanggan 5 Menit
         self.TRACK_LOST_TIMEOUT = 8         # Tracking Hilang
 
         # =========================
@@ -104,12 +106,18 @@ class ROIStateMachine:
     # BACKEND: KIRIM SERVICE
     # =========================
     def send_service(self, waiting_time):
+
+        valid_count = self.get_valid_customer_count()
+
+        if valid_count <= 0:
+            return
         url = f"{BASE_URL}/api/ai/services"
 
         data = {
             "cafe_id": self.cafe_id,
             "device_code": self.device_code,
             "customer_code": f"T{self.roi_id}-{int(time.time())}",
+            "customer_count": valid_count,
             "table_number": f"T{self.roi_id}",
             "waiting_time": int(waiting_time),
             "tanggal": datetime.now().strftime("%Y-%m-%d")
@@ -144,6 +152,16 @@ class ROIStateMachine:
         except Exception as e:
             print("ERROR:", e)
 
+    def get_valid_customer_count(self):
+
+        count = 0
+
+        for pdata in self.person_timers.values():
+
+            if pdata["counted"]:
+                count += 1
+
+        return count
     # =========================
     # UPDATE STATE
     # =========================
@@ -155,7 +173,7 @@ class ROIStateMachine:
         current_ids = set([p["id"] for p in tracked_persons])
 
         # =========================
-        # INIT / UPDATE PERSON
+        # INIT / UPDATE PERSON (DENGAN SPATIAL RE-ID)
         # =========================
         for person in tracked_persons:
 
@@ -163,38 +181,52 @@ class ROIStateMachine:
             pos = person.get("pos", (0, 0))
 
             if pid not in self.person_timers:
+                
+                # 1. Cari apakah ada ID lama yang baru saja hilang di posisi terdekat
+                matched_old_pid = None
+                min_dist = self.RECOUNT_DISTANCE # Batas toleransi jarak (120 piksel)
 
-                self.person_timers[pid] = {
+                for old_pid, pdata in self.person_timers.items():
+                    # Pastikan ID lama ini sedang tidak aktif di frame sekarang
+                    if old_pid not in current_ids:
+                        old_pos = pdata["pos"]
+                        # Hitung jarak Euclidean antara koordinat baru dan koordinat lama
+                        dist = ((pos[0] - old_pos[0])**2 + (pos[1] - old_pos[1])**2)**0.5
+                        
+                        if dist < min_dist:
+                            min_dist = dist
+                            matched_old_pid = old_pid
 
-                    # pertama duduk
-                    "seat_start": now,
-
-                    # waiting dimulai
-                    "waiting_start": now,
-
-                    # served dimulai
-                    "served_start": None,
-
-                    # status
-                    "counted": False,
-
-                    # duration
-                    "waiting_duration": 0,
-                    "served_duration": 0,
-                    "seat_duration": 0,
-
-                    # floating timer
-                    "floating_time": 0,
-
-                    # tracking
-                    "last_seen": now,
-                    "pos": pos
-                }
+                # 2. Jika ditemukan ID lama yang cocok, wariskan semua datanya ke ID baru
+                if matched_old_pid is not None:
+                    self.person_timers[pid] = self.person_timers.pop(matched_old_pid)
+                    print(f"[RE-ID MATCH] ID {matched_old_pid} hilang sementara, dilanjutkan oleh ID baru: {pid}")
+                
+                # 3. Jika benar-benar orang baru (tidak ada ID lama yang dekat), buat timer baru
+                else:
+                    self.person_timers[pid] = {
+                        # pertama duduk
+                        "seat_start": now,
+                        # waiting dimulai
+                        "waiting_start": now,
+                        # served dimulai
+                        "served_start": None,
+                        # status
+                        "counted": False,
+                        # duration
+                        "waiting_duration": 0,
+                        "served_duration": 0,
+                        "seat_duration": 0,
+                        # floating timer
+                        "floating_time": 0,
+                        # tracking
+                        "last_seen": now,
+                        "pos": pos
+                    }
 
             else:
                 self.person_timers[pid]["last_seen"] = now
                 self.person_timers[pid]["pos"] = pos
-
         # =========================
         # HANDLE TRACK HILANG
         # =========================
@@ -271,6 +303,12 @@ class ROIStateMachine:
                     pdata["seat_duration"]
                 )
 
+                if not self.service_sent:
+
+                    self.send_service(self.waiting_time)
+
+                    self.service_sent = True
+
                 print(
                     f"[CUSTOMER] "
                     f"ID={pid} "
@@ -299,12 +337,15 @@ class ROIStateMachine:
         # FOOD STABILIZER
         # =========================
         if food_count > 0:
-            self.food_detected_frames += 1
+            if self.food_start_time is None:
+                self.food_start_time = now  # Kunci waktu pertama kali makanan terlihat
         else:
-            self.food_detected_frames = 0
+            self.food_start_time = None  # Reset jika makanan sempat hilang dari kamera
 
+        # Makanan dinyatakan stabil jika sudah terdeteksi terus-menerus selama X detik
         food_stable = (
-            self.food_detected_frames >= self.FOOD_STABLE_FRAMES
+            self.food_start_time is not None 
+            and (now - self.food_start_time) >= self.FOOD_STABLE_DURATION
         )
 
         # =========================
@@ -345,10 +386,21 @@ class ROIStateMachine:
 
                 self.state = "SERVED"
 
-                self.send_service(self.waiting_time)
-
-                # RESET TIMER SERVED
                 now_reset = time.time()
+
+                for pid in self.person_timers:
+
+                    pdata = self.person_timers[pid]
+
+                    pdata["served_start"] = now_reset
+
+                    pdata["waiting_duration"] = int(
+                        now_reset - pdata["waiting_start"]
+                    )
+
+                    pdata["floating_time"] = 0
+
+                self.sent = True
 
                 for pid in self.person_timers:
 
@@ -375,24 +427,42 @@ class ROIStateMachine:
 
         elif self.state == "SERVED":
 
-            # reset hanya jika:
-            # - tidak ada orang
-            # - DAN makanan juga sudah hilang
+            # =========================
+            # KIRIM SERVICE SETELAH ADA CUSTOMER VALID
+            # =========================
+            valid_customer = self.get_valid_customer_count()
 
+            if (
+                valid_customer > 0
+                and not self.service_sent
+            ):
+
+                self.service_sent = True
+
+                print(
+                    f"[SERVICE SENT] ROI={self.roi_id} "
+                    f"CUSTOMER={valid_customer}"
+                )
+
+            # =========================
+            # LOGIKA RESET LAMA
+            # =========================
             if person_count == 0 and food_count == 0:
 
                 if self.no_person_start is None:
                     self.no_person_start = now
 
-                # kosong 1 menit baru reset
                 elif now - self.no_person_start > 60:
                     self.reset()
 
             else:
                 self.no_person_start = None
 
-        return self.state, self.waiting_time, self.stay_time
-
+        return (
+            self.state,
+            self.waiting_time,                
+            self.stay_time
+        )
     # =========================
     # GET FLOATING LABELS
     # =========================
@@ -442,6 +512,7 @@ class ROIStateMachine:
         self.stay_time = 0
 
         self.sent = False
+        self.service_sent = False
 
         self.alert_sent = False
 

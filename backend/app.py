@@ -89,8 +89,6 @@ def home():
 # =====================================================
 # LOGIN
 # =====================================================
-
-
 @app.route("/api/login", methods=["POST"])
 def login():
 
@@ -98,30 +96,49 @@ def login():
 
         data = request.get_json()
 
+        print("\n========== LOGIN ==========")
+        print("DATA:", data)
+
         username = data["username"]
         password = data["password"]
+
+        print("USERNAME INPUT:", username)
+        print("PASSWORD INPUT:", password)
 
         docs = db.collection("cafes")\
             .where("username", "==", username)\
             .limit(1)\
             .get()
 
+        print("DOC COUNT:", len(docs))
+
         doc = docs[0] if docs else None
 
         if not doc:
+            print("❌ USER TIDAK DITEMUKAN")
             return jsonify({
                 "error": "Username atau password salah"
             }), 401
 
         cafe = doc.to_dict()
 
-        if not check_password_hash(
+        print("DB USERNAME:", cafe.get("username"))
+        print("DB ROLE:", cafe.get("role"))
+
+        valid = check_password_hash(
             cafe.get("password"),
             password
-        ):
+        )
+
+        print("PASSWORD VALID:", valid)
+
+        if not valid:
+            print("❌ PASSWORD SALAH")
             return jsonify({
                 "error": "Username atau password salah"
             }), 401
+
+        print("✅ LOGIN BERHASIL")
 
         access_token = create_access_token(
             identity=doc.id,
@@ -702,6 +719,8 @@ def add_service():
         "cafe_id",
         "customer_code",
         "table_number",
+        "customer_count",
+        "jam",
         "waiting_time",
         "tanggal"
     ]
@@ -715,6 +734,8 @@ def add_service():
         "cafe_id": data["cafe_id"],
         "customer_code": data["customer_code"],
         "table_number": data["table_number"],
+        "customer_count": int(data["customer_count"]),
+        "jam": data["jam"],
         "waiting_time": int(data["waiting_time"]),
         "status": status,
         "tanggal": data["tanggal"]
@@ -735,6 +756,8 @@ def add_service_ai():
         "cafe_id",
         "customer_code",
         "table_number",
+        "customer_count",
+        "jam",
         "waiting_time",
         "tanggal"
     ]
@@ -748,9 +771,11 @@ def add_service_ai():
         "cafe_id": data["cafe_id"],
         "customer_code": data["customer_code"],
         "table_number": data["table_number"],
+        "customer_count": int(data["customer_count"]),
+        "jam": data["jam"],
         "waiting_time": int(data["waiting_time"]),
         "status": status,
-        "tanggal": data["tanggal"],
+        "tanggal": data["tanggal"]
     })
 
     return jsonify({"message": "Service dari AI masuk"})
@@ -998,90 +1023,67 @@ def video_feed(device_code, cam_index):
     )
 
 # =====================================================
-# RECEIVE FRAME (LOCAL STREAM)
+# RECEIVE FRAME 
 # =====================================================
 @app.route("/api/frame", methods=["POST"])
 def receive_frame():
 
+    print("\n==========================")
+    print("FRAME REQUEST MASUK")
+    print("==========================")
+
     try:
         device_code = request.form.get("device_code")
+        
+        # Menerima indeks kamera dari pengirim (default "0")
         cam_index = request.form.get("cam_index", "0")
+
+        print("DEVICE:", device_code, "CAM:", cam_index)
 
         file = request.files.get("frame")
 
         if not device_code or not file:
-            print("❌ INVALID REQUEST")
+            print("DEVICE ATAU FILE KOSONG")
             return jsonify({
                 "error": "device_code/frame kosong"
             }), 400
 
-        # =========================
-        # READ IMAGE
-        # =========================
         frame_bytes = file.read()
 
-        nparr = np.frombuffer(
-            frame_bytes,
-            np.uint8
-        )
+        print("FRAME SIZE:", len(frame_bytes))
 
-        frame = cv2.imdecode(
-            nparr,
-            cv2.IMREAD_COLOR
-        )
+        nparr = np.frombuffer(frame_bytes, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         if frame is None:
-            print("❌ FRAME NONE")
+            print("DECODE GAGAL")
             return jsonify({
                 "error": "decode gagal"
             }), 400
 
-        # =========================
-        # RESIZE (OPTIMASI STREAM)
-        # =========================
-        frame = cv2.resize(
-            frame,
-            (640, 480)
-        )
+        frame = cv2.resize(frame, (640, 480))
 
-        # =========================
-        # KEY MULTI CAMERA
-        # contoh:
-        # RASPI01_0
-        # RASPI01_1
-        # =========================
+        # Gabungkan kode device dan indeks kamera menjadi key unik RAM
         stream_key = f"{device_code}_{cam_index}"
 
-        # =========================
-        # SAVE TO RAM
-        # =========================
-        frame_store.frames[stream_key] = frame
+        # =====================================================
+        # PERBAIKAN: Simpan ke LOCAL_FRAMES & update tracker waktu
+        # =====================================================
+        LOCAL_FRAMES[stream_key] = frame
+        last_frame_time[stream_key] = time.time()
 
-        # =========================
-        # DEBUG LOCAL DISPLAY
-        # HAPUS NANTI JIKA SUDAH FIX
-        # =========================
-    #     cv2.imshow(
-    #         f"DEBUG {stream_key}",
-    #         frame
-    #     )
+        print("FRAME SAVED TO LOCAL_FRAMES:", stream_key, frame.shape)
 
-    #     cv2.waitKey(1)
+        return jsonify({
+            "message": "frame diterima",
+            "stream_key": stream_key
+        })
 
-    #     print(f"✅ FRAME OK: {stream_key}")
-
-    #     return jsonify({
-    #         "message": "frame diterima",
-    #         "stream_key": stream_key
-    #     })
-
-    # except Exception as e:
-
-    #     print("❌ ERROR FRAME:", str(e))
-
-    #     return jsonify({
-    #         "error": str(e)
-    #     }), 500
+    except Exception as e:
+        print("ERROR FRAME:", str(e))
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 @app.route("/api/meja-summary", methods=["GET"])
 def meja_summary():
@@ -1170,7 +1172,14 @@ def register_device_ai():
 # =====================================================
 @app.route("/api/ai/services", methods=["POST"])
 def ai_add_service():
+
+    print("\n=================================")
+    print("SERVICE REQUEST MASUK")
+    print("=================================")
+
     data = request.json
+
+    print(data)
 
     required = [
         "cafe_id",
@@ -1182,95 +1191,127 @@ def ai_add_service():
     ]
 
     if not all(k in data for k in required):
-        return jsonify({"error": "Field tidak lengkap"}), 400
 
-    status = "long" if int(data["waiting_time"]) >= 30 else "normal"
+        print("FIELD TIDAK LENGKAP")
 
-    db.collection("services").add({
-        "cafe_id": data["cafe_id"],
-        "device_code": data["device_code"],  # 🔥 penting
-        "customer_code": data["customer_code"],
-        "table_number": data["table_number"],
-        "waiting_time": int(data["waiting_time"]),
-        "status": status,
-        "tanggal": data["tanggal"]
-    })
+        return jsonify({
+            "error": "Field tidak lengkap"
+        }), 400
 
-    return jsonify({"message": "Service dari AI masuk"})
+    try:
+
+        status = (
+            "long"
+            if int(data["waiting_time"]) >= 30
+            else "normal"
+        )
+
+        jam = data.get(
+            "jam",
+            datetime.now().strftime("%H:%M:%S")
+        )
+
+        service_data = {
+            "cafe_id": data["cafe_id"],
+            "device_code": data["device_code"],
+            "customer_code": data["customer_code"],
+            "table_number": data["table_number"],
+            "customer_count": int(
+                data.get("customer_count", 0)
+            ),
+            "jam": jam,
+            "waiting_time": int(data["waiting_time"]),
+            "status": status,
+            "tanggal": data["tanggal"]
+        }
+
+        print("\n===== SIMPAN FIRESTORE =====")
+        print(service_data)
+        print("============================")
+
+        # =====================================
+        # FORMAT DOC ID
+        # cafe_tanggal_jam_meja
+        # =====================================
+        doc_id = (
+            f"{data['cafe_id']}_"
+            f"{data['tanggal']}_"
+            f"{jam.replace(':', '-')}_"
+            f"{data['table_number']}"
+        )
+
+        print("DOC ID:", doc_id)
+
+        # =====================================
+        # SIMPAN FIRESTORE
+        # =====================================
+        db.collection("services")\
+            .document(doc_id)\
+            .set(service_data)
+
+        print("BERHASIL DISIMPAN")
+
+        return jsonify({
+            "message": "Service dari AI masuk",
+            "doc_id": doc_id
+        }), 200
+
+    except Exception as e:
+
+        print("\n========== FIRESTORE ERROR ==========")
+        print(str(e))
+        print("=====================================\n")
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 # =====================================================
 # AUTO OFFLINE CHECKER
 # =====================================================
 def auto_offline_checker():
-
     tz = pytz.timezone("Asia/Jakarta")
-
     while True:
-
         try:
-
-            # 🔥 pakai get() bukan stream()
+            # Ambil semua device dari Firestore untuk dicocokkan dengan RAM
             docs = db.collection("devices").get()
-
-            print(f"[AUTO CHECK] total devices: {len(docs)}")
+            now_ts = time.time()
 
             for doc in docs:
-
                 data = doc.to_dict()
-
-                last_update = data.get("last_update")
                 status = data.get("status")
                 device_code = data.get("device_code")
+                cafe_id = data.get("cafe_id")
 
-                # skip kalau bukan active
-                if status != "active":
-                    continue
+                # Kita cek cam_index_0 sebagai patokan utama keaktifan device
+                stream_key = f"{device_code}_0"
+                last_seen_frame = last_frame_time.get(stream_key)
 
-                # skip kalau tidak ada waktu
-                if not last_update:
-                    continue
-
-                try:
-
-                    last_time = datetime.fromisoformat(
-                        last_update
-                    )
-
-                except Exception as e:
-
-                    print("[PARSE ERROR]", e)
-                    continue
-
-                now = datetime.now(tz)
-
-                delta = (
-                    now - last_time
-                ).total_seconds()
-
-                print(
-                    f"[CHECK] {device_code} | "
-                    f"{delta:.1f}s"
-                )
-
-                # 🔥 OFFLINE kalau > 20 detik
-                if delta > 20:
-
-                    doc.reference.update({
-                        "status": "inactive"
-                    })
-
-                    print(
-                        f"[AUTO OFF] {device_code}"
-                    )
+                if last_seen_frame:
+                    delta = now_ts - last_seen_frame
+                    
+                    # Jika sudah tidak kirim frame > 20 detik dan status di DB masih 'active'
+                    if delta > 20 and status == "active":
+                        doc.reference.update({
+                            "status": "inactive"
+                        })
+                        print(f"[AUTO OFF] {device_code} tidak mengirim frame selama {delta:.1f}s")
+                    
+                    # Jika mendadak aktif lagi tetapi di DB berstatus 'inactive'
+                    elif delta <= 20 and status != "active":
+                        doc.reference.update({
+                            "status": "active",
+                            "last_update": now_wib()
+                        })
+                        print(f"[AUTO ON] {device_code} kembali aktif.")
+                else:
+                    # Jika belum pernah kirim frame sama sekali semenjak server jalan
+                    if status == "active":
+                        doc.reference.update({"status": "inactive"})
 
         except Exception as e:
+            print("ERROR AUTO OFF OPMITIZED:", e)
 
-            print(
-                "ERROR AUTO OFF:",
-                e
-            )
-
-        # 🔥 DELAY BESAR
-        time.sleep(30)
+        time.sleep(25) # Cek berkala setiap 25 detik
 
 # ====================================
 # CLEAN OLD FRAMES

@@ -90,9 +90,11 @@ function loadCameras() {
                             ${device.device_code} - Kamera ${i + 1}
                         </h3>
 
-                        <div class="relative w-full max-w-[1280px] aspect-video bg-black rounded-xl overflow-hidden mx-auto">
-                            <img src="${CONFIG.STREAM_URL}/video_feed/${device.device_code}/${i}"
-                                 class="w-full h-full object-contain bg-black"" />
+                        <div class="relative w-full max-w-[1280px] rounded-xl overflow-hidden mx-auto bg-black">
+                            <img 
+                                src="${CONFIG.STREAM_URL}/video_feed/${device.device_code}/${i}"
+                                class="w-full h-full object-contain"
+                            />
                         </div>
                     </div>
                 `;
@@ -169,6 +171,8 @@ function loadServices(tanggal) {
                 <tr>
                     <td class="px-6 py-5">${item.customer_code}</td>
                     <td class="px-6 py-5">${item.table_number}</td>
+                    <td class="px-6 py-5">${item.customer_count || 0}</td>
+                    <td class="px-6 py-5">${item.jam || "-"}</td>
                     <td class="px-6 py-5">${formatTime(item.waiting_time)} Menit</td>
                     <td class="px-6 py-5 text-center">
                         <span class="px-6 py-1.5 rounded-full ${statusClass} text-sm font-bold">
