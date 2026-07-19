@@ -185,7 +185,7 @@ roi_manager = ROIManager()
 roi_manager.add_roi(
     ROI(
         1,
-        [(1164, 717), (64, 717), (64, 416), (1164, 416)],
+        [(1278, 714), (276, 714), (276, 320), (1278, 320)],
         offset_y=50
     )
 )
@@ -193,7 +193,7 @@ roi_manager.add_roi(
 roi_manager.add_roi(
     ROI(
         2,
-        [(418, 307), (0, 307), (0, 120), (418, 120)],
+        [(350, 312), (0, 312), (0, 130), (350, 130)],
         offset_y=50
     )
 )
@@ -201,7 +201,7 @@ roi_manager.add_roi(
 roi_manager.add_roi(
     ROI(
         3,
-        [(860, 202), (537, 202), (537, 3), (860, 3)],
+        [(679, 206), (360, 206), (360, 17), (679, 17)],
         offset_y=50
     )
 )
@@ -209,7 +209,7 @@ roi_manager.add_roi(
 roi_manager.add_roi(
     ROI(
         4,
-        [(1278, 307), (860, 307), (860, 53), (1278, 53)],
+        [(1278, 250), (872, 250), (872, 50), (1278, 50)],
         offset_y=50
     )
 )
@@ -486,6 +486,47 @@ def app_callback(pad, info, user_data):
         roi_states,
         roi_timers,
         roi_stay_timers
+    )
+    
+    # =========================
+    # DRAW TABLE LABEL (T1, T2, T3, T4)
+    # =========================
+    for roi in roi_manager.rois:
+
+        # Ambil titik paling atas ROI
+        min_y = min(p[1] for p in roi.points)
+
+        # Ambil titik paling kiri dan kanan yang berada di atas
+        top_points = [p for p in roi.points if p[1] == min_y]
+
+        if len(top_points) == 1:
+            x = top_points[0][0]
+        else:
+            x = int(sum(p[0] for p in top_points) / len(top_points))
+
+        y = min_y - 15
+
+        cv2.putText(
+            annotated_frame,
+            f"T{roi.roi_id}",
+            (x - 15, y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (255, 255, 255),   # putih
+            3,
+            cv2.LINE_AA
+        )
+
+    # outline hitam supaya terbaca
+    cv2.putText(
+        annotated_frame,
+        f"T{roi.roi_id}",
+        (x - 15, y),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.8,
+        (0, 0, 0),
+        1,
+        cv2.LINE_AA
     )
     
     # =========================

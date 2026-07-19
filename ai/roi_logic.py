@@ -49,7 +49,8 @@ class ROIStateMachine:
         self.stay_time = 0
         self.sent = False
         self.service_sent = False
-
+        self.transaction_tracks = set()
+        self.valid_track_ids = set()
         # MQTT
         self.mqtt = MQTTHandler()
         self.alert_sent = False
@@ -61,9 +62,9 @@ class ROIStateMachine:
         # CONFIG
         # =========================
         self.EMPTY_TIMEOUT = 60             # Meja kosong selama 1 menit agar reset kembali
-        self.FOOD_STABLE_DURATION = 5  # Makanan harus menetap selama 5 detik (bisa kamu naikkan sesuai kebutuhan)
+        self.FOOD_STABLE_DURATION = 20  # Makanan harus menetap selama 5 detik (bisa kamu naikkan sesuai kebutuhan)
         self.food_start_time = None    # Menandai kapan makanan mulai terdeteksi      # Makanan Stabil Terdeteksi
-        self.ALERT_THRESHOLD = 900          # Buzzer
+        self.ALERT_THRESHOLD = 90          # Buzzer 15 menit (untuk sidang dipercepat 30 detik) 
         self.MIN_WAIT_TIME = 5
 
         # =========================
@@ -73,8 +74,8 @@ class ROIStateMachine:
 
         self.total_customers = 0
 
-        self.CUSTOMER_VALID_TIME = 10     # Customer agar valid sebagai pelanggan 5 Menit
-        self.TRACK_LOST_TIMEOUT = 8         # Tracking Hilang
+        self.CUSTOMER_VALID_TIME = 20    # Customer agar valid sebagai pelanggan 5 Menit (dipercepat 1 menit untuk sidang)
+        self.TRACK_LOST_TIMEOUT = 20       # Tracking Hilang
 
         # =========================
         # ANTI DOUBLE COUNT
@@ -83,22 +84,23 @@ class ROIStateMachine:
 
         self.RECOUNT_BLOCK_TIME = 900
         self.RECOUNT_DISTANCE = 120
+        
 
     # =========================
     # BACKEND: KIRIM CUSTOMER
     # =========================
-    def send_customer(self, person_id, duration):
+    def send_customer(self, jumlah):
         url = f"{BASE_URL}/api/tambah"
 
         data = {
             "cafe_id": self.cafe_id,
-            "jumlah": 1,
+            "jumlah": int(jumlah),  # <-- Ganti jadi jumlah dinamis
             "table_number": f"T{self.roi_id}"
         }
 
         try:
             res = requests.post(url, json=data)
-            print(f"[KIRIM] ROI {self.roi_id} →", res.status_code, res.text)
+            print(f"[KIRIM AKUMULATIF] ROI {self.roi_id} → Total Orang: {jumlah} | Status: {res.status_code}")
         except Exception as e:
             print("[ERROR API]:", e)
 
@@ -240,6 +242,7 @@ class ROIStateMachine:
         # =========================
         # UPDATE TIMER PERSON
         # =========================
+        newly_counted_this_frame = 0
         for pid, pdata in self.person_timers.items():
 
             # total duduk
@@ -293,29 +296,25 @@ class ROIStateMachine:
                 and not pdata["counted"]
                 and self.state == "SERVED"
             ):
-
                 pdata["counted"] = True
-
                 self.total_customers += 1
-
-                self.send_customer(
-                    pid,
-                    pdata["seat_duration"]
-                )
-
-                if not self.service_sent:
-
-                    self.send_service(self.waiting_time)
-
-                    self.service_sent = True
+                
+                newly_counted_this_frame += 1 
 
                 print(
-                    f"[CUSTOMER] "
+                    f"[CUSTOMER] VALIDATED -> "
                     f"ID={pid} "
                     f"WAIT={pdata['waiting_duration']}s "
                     f"SERVED={pdata['served_duration']}s "
                     f"TOTAL={pdata['seat_duration']}s"
                 )
+
+        if newly_counted_this_frame > 0:
+            self.send_customer(newly_counted_this_frame)
+
+            if not self.service_sent:
+                self.send_service(self.waiting_time)
+                self.service_sent = True
 
         # =========================
         # CONVERT COUNT

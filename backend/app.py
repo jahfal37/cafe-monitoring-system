@@ -728,7 +728,7 @@ def add_service():
     if not all(k in data for k in required):
         return jsonify({"error": "Field tidak lengkap"}), 400
 
-    status = "long" if int(data["waiting_time"]) >= 30 else "normal"
+    status = "long" if int(data["waiting_time"]) >= 900 else "normal"
 
     db.collection("services").add({
         "cafe_id": data["cafe_id"],
@@ -765,7 +765,7 @@ def add_service_ai():
     if not all(k in data for k in required):
         return jsonify({"error": "Field tidak lengkap"}), 400
 
-    status = "long" if int(data["waiting_time"]) >= 30 else "normal"
+    status = "long" if int(data["waiting_time"]) >= 900 else "normal"
 
     db.collection("services").add({
         "cafe_id": data["cafe_id"],
@@ -1202,7 +1202,7 @@ def ai_add_service():
 
         status = (
             "long"
-            if int(data["waiting_time"]) >= 30
+            if int(data["waiting_time"]) >= 900
             else "normal"
         )
 
